@@ -4,6 +4,7 @@ import { serveStatic } from 'hono/cloudflare-workers'
 import { renderer } from './renderer'
 import type { Bindings } from './types'
 import authRoutes from './routes/auth'
+import templateRoutes from './routes/templates'
 import { authenticate } from './middleware/auth'
 import { hashPassword } from './utils/auth'
 
@@ -17,6 +18,10 @@ app.use('/static/*', serveStatic({ root: './public' }))
 
 // APIルート
 app.route('/api/auth', authRoutes)
+
+// 認証が必要なAPIルート
+app.use('/api/templates/*', authenticate)
+app.route('/api/templates', templateRoutes)
 
 // レンダラー適用
 app.use(renderer)
@@ -131,7 +136,7 @@ app.get('/register', (c) => {
   )
 })
 
-// ダッシュボード（仮）
+// ダッシュボード
 app.get('/dashboard', (c) => {
   return c.render(
     <div class="min-h-screen">
@@ -140,7 +145,7 @@ app.get('/dashboard', (c) => {
           <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             帳票作成アプリ
           </h1>
-          <button class="logout-btn text-gray-600 hover:text-gray-800 cursor-pointer">
+          <button id="logoutBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer">
             ログアウト
           </button>
         </div>
@@ -155,10 +160,10 @@ app.get('/dashboard', (c) => {
           <h3 class="text-lg font-bold mb-4">現在のプラン</h3>
           <div class="flex justify-between items-center">
             <div>
-              <p class="text-xl font-bold">無料プラン</p>
+              <p class="text-xl font-bold" id="planName">無料プラン</p>
               <p class="text-gray-600" id="planStatus">テンプレート: 0 / 1 使用中</p>
             </div>
-            <button class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition">
+            <button id="upgradeBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition">
               プレミアムプランにアップグレード
             </button>
           </div>
@@ -167,23 +172,70 @@ app.get('/dashboard', (c) => {
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
           <div class="flex justify-between items-center mb-6">
             <h3 class="text-lg font-bold">マイテンプレート</h3>
-            <button class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
-              + 新しいテンプレートを作成
+            <button id="uploadBtn" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
+              <i class="fas fa-upload mr-2"></i>新しいテンプレートを作成
             </button>
           </div>
-          <p class="text-gray-500 text-center py-8">テンプレートがまだありません</p>
+          <div id="templatesList">
+            <p class="text-gray-500 text-center py-8">テンプレートがまだありません</p>
+          </div>
         </div>
       </div>
+
+      {/* アップロードモーダル */}
+      <div id="uploadModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
+          <h3 class="text-2xl font-bold mb-6">テンプレートアップロード</h3>
+          <form id="uploadForm" enctype="multipart/form-data">
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2">テンプレート名</label>
+              <input 
+                type="text" 
+                name="template_name" 
+                required
+                class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                placeholder="例: 見積書テンプレート"
+              />
+            </div>
+            <div class="mb-6">
+              <label class="block text-gray-700 mb-2">Excelファイル（.xlsx, .xls）</label>
+              <input 
+                type="file" 
+                name="file" 
+                accept=".xlsx,.xls"
+                required
+                class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+              <p class="text-sm text-gray-500 mt-2">最大10MBまで</p>
+            </div>
+            <div class="flex gap-4">
+              <button 
+                type="submit"
+                class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+              >
+                アップロード
+              </button>
+              <button 
+                type="button"
+                id="cancelUploadBtn"
+                class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-400 transition"
+              >
+                キャンセル
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <script src="/static/app.js"></script>
       <script>{`
         // ページ読み込み時にユーザー情報を表示
         const user = JSON.parse(localStorage.getItem('user') || '{}')
-        if (user.name) {
-          document.getElementById('userGreeting').textContent = 'こんにちは、' + user.name + 'さん'
-          document.getElementById('planStatus').textContent = 'テンプレート: ' + user.templates_created + ' / 1 使用中'
-        } else {
-          // ログインしていない場合はログインページへ
+        if (!user.name) {
           window.location.href = '/'
+        } else {
+          document.getElementById('userGreeting').textContent = 'こんにちは、' + user.name + 'さん'
+          document.getElementById('planName').textContent = user.current_plan === 'premium' ? 'プレミアムプラン' : '無料プラン'
         }
       `}</script>
     </div>,
