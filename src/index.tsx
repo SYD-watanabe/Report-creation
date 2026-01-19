@@ -3,6 +3,9 @@ import { cors } from 'hono/cors'
 import { serveStatic } from 'hono/cloudflare-workers'
 import { renderer } from './renderer'
 import type { Bindings } from './types'
+import authRoutes from './routes/auth'
+import { authenticate } from './middleware/auth'
+import { hashPassword } from './utils/auth'
 
 const app = new Hono<{ Bindings: Bindings }>()
 
@@ -11,6 +14,9 @@ app.use('/api/*', cors())
 
 // 静的ファイル提供
 app.use('/static/*', serveStatic({ root: './public' }))
+
+// APIルート
+app.route('/api/auth', authRoutes)
 
 // レンダラー適用
 app.use(renderer)
@@ -23,7 +29,7 @@ app.get('/', (c) => {
         <h1 class="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
           帳票作成アプリ
         </h1>
-        <form action="/api/auth/login" method="POST" id="loginForm">
+        <form id="loginForm">
           <div class="mb-4">
             <label class="block text-gray-700 mb-2">メールアドレス</label>
             <input 
@@ -55,8 +61,73 @@ app.get('/', (c) => {
           <a href="/register" class="text-blue-600 hover:underline">新規登録</a>
         </div>
       </div>
+      <script src="/static/app.js"></script>
     </div>,
     { title: 'ログイン - 帳票作成アプリ' }
+  )
+})
+
+// 新規登録ページ
+app.get('/register', (c) => {
+  return c.render(
+    <div class="min-h-screen flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+        <h1 class="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          新規登録
+        </h1>
+        <form id="registerForm">
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-2">お名前</label>
+            <input 
+              type="text" 
+              name="name" 
+              required
+              class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-2">メールアドレス</label>
+            <input 
+              type="email" 
+              name="email" 
+              required
+              class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-2">パスワード（8文字以上）</label>
+            <input 
+              type="password" 
+              name="password" 
+              required
+              minlength="8"
+              class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div class="mb-6">
+            <label class="block text-gray-700 mb-2">パスワード（確認）</label>
+            <input 
+              type="password" 
+              name="confirmPassword" 
+              required
+              minlength="8"
+              class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <button 
+            type="submit"
+            class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition"
+          >
+            登録
+          </button>
+        </form>
+        <div class="mt-4 text-center">
+          <a href="/" class="text-blue-600 hover:underline">ログインはこちら</a>
+        </div>
+      </div>
+      <script src="/static/app.js"></script>
+    </div>,
+    { title: '新規登録 - 帳票作成アプリ' }
   )
 })
 
@@ -69,7 +140,7 @@ app.get('/dashboard', (c) => {
           <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             帳票作成アプリ
           </h1>
-          <button onclick="window.location.href='/'" class="text-gray-600 hover:text-gray-800">
+          <button class="logout-btn text-gray-600 hover:text-gray-800 cursor-pointer">
             ログアウト
           </button>
         </div>
@@ -77,7 +148,7 @@ app.get('/dashboard', (c) => {
       
       <div class="max-w-7xl mx-auto px-4 py-8">
         <div class="mb-8">
-          <h2 class="text-2xl font-bold mb-4">こんにちは、ユーザーさん</h2>
+          <h2 class="text-2xl font-bold mb-4" id="userGreeting">こんにちは、ユーザーさん</h2>
         </div>
         
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
@@ -85,7 +156,7 @@ app.get('/dashboard', (c) => {
           <div class="flex justify-between items-center">
             <div>
               <p class="text-xl font-bold">無料プラン</p>
-              <p class="text-gray-600">テンプレート: 0 / 1 使用中</p>
+              <p class="text-gray-600" id="planStatus">テンプレート: 0 / 1 使用中</p>
             </div>
             <button class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition">
               プレミアムプランにアップグレード
@@ -103,6 +174,18 @@ app.get('/dashboard', (c) => {
           <p class="text-gray-500 text-center py-8">テンプレートがまだありません</p>
         </div>
       </div>
+      <script src="/static/app.js"></script>
+      <script>{`
+        // ページ読み込み時にユーザー情報を表示
+        const user = JSON.parse(localStorage.getItem('user') || '{}')
+        if (user.name) {
+          document.getElementById('userGreeting').textContent = 'こんにちは、' + user.name + 'さん'
+          document.getElementById('planStatus').textContent = 'テンプレート: ' + user.templates_created + ' / 1 使用中'
+        } else {
+          // ログインしていない場合はログインページへ
+          window.location.href = '/'
+        }
+      `}</script>
     </div>,
     { title: 'ダッシュボード - 帳票作成アプリ' }
   )
@@ -221,12 +304,13 @@ app.post('/api/db/init', async (c) => {
     }
 
     // サンプルユーザーを挿入
+    const demoPasswordHash = await hashPassword('demo123456')
     await DB.prepare(`
       INSERT OR IGNORE INTO users (email, password_hash, name, current_plan, templates_created)
       VALUES (?, ?, ?, ?, ?)
     `).bind(
       'demo@example.com',
-      '$2b$10$XQK0kCl7DkqH1HqNbJ1VNuH8yJPvE4qZ0ggXxF.vGQmLQK1xC0yXW',
+      demoPasswordHash,
       'デモユーザー',
       'free',
       0
