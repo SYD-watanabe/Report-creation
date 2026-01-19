@@ -1,1 +1,14 @@
-h1 { font-family: Arial, Helvetica, sans-serif; }
+/* Custom styles for the application */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Smooth transitions */
+button, a {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Form focus states */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+}
