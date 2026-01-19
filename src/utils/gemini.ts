@@ -26,7 +26,8 @@ export async function extractFieldsWithGemini(
 ): Promise<ExtractionResult> {
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    // gemini-2.5-flash-lite を試す
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
 
     const prompt = `
 あなたはExcelの見積書テンプレートを分析するAIアシスタントです。
@@ -111,9 +112,21 @@ ${excelSummary}
       confidence: parsed.confidence || 0.7,
       suggestions: parsed.suggestions || []
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Gemini API error:', error);
-    throw new Error('AI項目抽出に失敗しました。Gemini APIキーを確認してください。');
+    console.error('Error details:', JSON.stringify(error, null, 2));
+    
+    // エラーメッセージを詳細に表示
+    const errorMessage = error?.message || 'Unknown error';
+    const errorStatus = error?.status || error?.response?.status;
+    
+    if (errorStatus === 404) {
+      throw new Error(`Gemini APIエンドポイントが見つかりません。モデル名を確認してください: ${errorMessage}`);
+    } else if (errorStatus === 403 || errorStatus === 401) {
+      throw new Error(`Gemini APIキーが無効です: ${errorMessage}`);
+    } else {
+      throw new Error(`AI項目抽出に失敗しました: ${errorMessage}`);
+    }
   }
 }
 
