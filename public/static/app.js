@@ -350,7 +350,15 @@ function formatDate(dateString) {
 
 // テンプレート詳細ページ初期化
 async function initTemplateDetail() {
-  const templateId = window.TEMPLATE_ID
+  // URLからテンプレートIDを取得
+  const pathParts = window.location.pathname.split('/')
+  const templateId = pathParts[pathParts.length - 1]
+  
+  if (!templateId || templateId === 'templates') {
+    alert('テンプレートIDが不正です')
+    window.location.href = '/dashboard'
+    return
+  }
   
   // テンプレート情報を読み込み
   await loadTemplateDetail(templateId)
