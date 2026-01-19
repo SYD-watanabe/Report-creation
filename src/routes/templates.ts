@@ -408,4 +408,140 @@ templates.post('/:id/extract', async (c) => {
   }
 });
 
+// 項目の更新（フォーム含む/除外、項目名編集）
+templates.patch('/:id/fields/:fieldId', async (c) => {
+  try {
+    const user = c.get('user');
+    const { env } = c;
+    const templateId = c.req.param('id');
+    const fieldId = c.req.param('fieldId');
+
+    // テンプレートの所有者確認
+    const template = await env.DB.prepare(`
+      SELECT * FROM templates WHERE template_id = ? AND user_id = ?
+    `).bind(templateId, user.user_id).first();
+
+    if (!template) {
+      const response: ApiResponse = {
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'テンプレートが見つかりません'
+        }
+      };
+      return c.json(response, 404);
+    }
+
+    const body = await c.req.json();
+    const { field_name, include_in_form, is_required } = body;
+
+    // 項目を更新
+    await env.DB.prepare(`
+      UPDATE template_fields
+      SET 
+        field_name = COALESCE(?, field_name),
+        include_in_form = COALESCE(?, include_in_form),
+        is_required = COALESCE(?, is_required)
+      WHERE field_id = ? AND template_id = ?
+    `).bind(
+      field_name || null,
+      include_in_form !== undefined ? include_in_form : null,
+      is_required !== undefined ? is_required : null,
+      fieldId,
+      templateId
+    ).run();
+
+    const response: ApiResponse = {
+      success: true,
+      message: '項目を更新しました'
+    };
+
+    return c.json(response);
+  } catch (error: any) {
+    console.error('Field update error:', error);
+    const response: ApiResponse = {
+      success: false,
+      error: {
+        code: 'UPDATE_ERROR',
+        message: '項目の更新に失敗しました'
+      }
+    };
+    return c.json(response, 500);
+  }
+});
+
+// 複数項目の一括更新
+templates.patch('/:id/fields', async (c) => {
+  try {
+    const user = c.get('user');
+    const { env } = c;
+    const templateId = c.req.param('id');
+
+    // テンプレートの所有者確認
+    const template = await env.DB.prepare(`
+      SELECT * FROM templates WHERE template_id = ? AND user_id = ?
+    `).bind(templateId, user.user_id).first();
+
+    if (!template) {
+      const response: ApiResponse = {
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'テンプレートが見つかりません'
+        }
+      };
+      return c.json(response, 404);
+    }
+
+    const body = await c.req.json();
+    const { fields } = body;
+
+    if (!Array.isArray(fields)) {
+      const response: ApiResponse = {
+        success: false,
+        error: {
+          code: 'INVALID_REQUEST',
+          message: 'fieldsは配列である必要があります'
+        }
+      };
+      return c.json(response, 400);
+    }
+
+    // 各項目を更新
+    for (const field of fields) {
+      await env.DB.prepare(`
+        UPDATE template_fields
+        SET 
+          field_name = COALESCE(?, field_name),
+          include_in_form = COALESCE(?, include_in_form),
+          is_required = COALESCE(?, is_required)
+        WHERE field_id = ? AND template_id = ?
+      `).bind(
+        field.field_name || null,
+        field.include_in_form !== undefined ? field.include_in_form : null,
+        field.is_required !== undefined ? field.is_required : null,
+        field.field_id,
+        templateId
+      ).run();
+    }
+
+    const response: ApiResponse = {
+      success: true,
+      message: `${fields.length}件の項目を更新しました`
+    };
+
+    return c.json(response);
+  } catch (error: any) {
+    console.error('Bulk field update error:', error);
+    const response: ApiResponse = {
+      success: false,
+      error: {
+        code: 'UPDATE_ERROR',
+        message: '項目の一括更新に失敗しました'
+      }
+    };
+    return c.json(response, 500);
+  }
+});
+
 export default templates;

@@ -445,10 +445,36 @@ function renderFields(fields) {
   }
   
   fieldsList.innerHTML = `
+    <div class="mb-4 flex justify-between items-center">
+      <div class="flex gap-4">
+        <button 
+          onclick="toggleAllFields(true)" 
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+        >
+          <i class="fas fa-check-square mr-2"></i>すべて選択
+        </button>
+        <button 
+          onclick="toggleAllFields(false)" 
+          class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+        >
+          <i class="fas fa-square mr-2"></i>すべて解除
+        </button>
+      </div>
+      <button 
+        onclick="saveFieldChanges()" 
+        class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold"
+      >
+        <i class="fas fa-save mr-2"></i>変更を保存
+      </button>
+    </div>
     <div class="overflow-x-auto">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <input type="checkbox" id="selectAll" onchange="toggleAllFields(this.checked)" class="rounded" />
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">フォームに含む</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">順序</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">項目名</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">タイプ</th>
@@ -460,9 +486,34 @@ function renderFields(fields) {
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           ${fields.map(field => `
-            <tr>
+            <tr data-field-id="${field.field_id}" class="${field.include_in_form === 0 ? 'bg-gray-50' : ''}">
+              <td class="px-4 py-4 whitespace-nowrap">
+                <input 
+                  type="checkbox" 
+                  class="field-checkbox rounded" 
+                  data-field-id="${field.field_id}"
+                  ${field.include_in_form !== 0 ? 'checked' : ''}
+                  onchange="toggleFieldInForm(${field.field_id}, this.checked)"
+                />
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
+                <span class="include-status-${field.field_id}">
+                  ${field.include_in_form !== 0 ? 
+                    '<span class="text-green-600"><i class="fas fa-check-circle mr-1"></i>含む</span>' : 
+                    '<span class="text-gray-400"><i class="fas fa-times-circle mr-1"></i>除外</span>'}
+                </span>
+              </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${field.display_order}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${escapeHtml(field.field_name)}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                <span class="field-name-${field.field_id}">${escapeHtml(field.field_name)}</span>
+                <button 
+                  onclick="editFieldName(${field.field_id}, '${escapeHtml(field.field_name).replace(/'/g, "\\'")}')"
+                  class="ml-2 text-blue-600 hover:text-blue-800"
+                  title="項目名を編集"
+                >
+                  <i class="fas fa-edit"></i>
+                </button>
+              </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${fieldTypeColors[field.field_type]}">
                   ${fieldTypeLabels[field.field_type]}
@@ -483,10 +534,21 @@ function renderFields(fields) {
         </tbody>
       </table>
     </div>
-    <div class="mt-4 text-sm text-gray-600">
-      <p>合計 ${fields.length} 項目</p>
+    <div class="mt-4 flex justify-between items-center">
+      <div class="text-sm text-gray-600">
+        <p>合計 ${fields.length} 項目 | フォームに含む: <span id="includedCount">${fields.filter(f => f.include_in_form !== 0).length}</span>項目</p>
+      </div>
+      <button 
+        onclick="saveFieldChanges()" 
+        class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold"
+      >
+        <i class="fas fa-save mr-2"></i>変更を保存
+      </button>
     </div>
   `
+  
+  // グローバル変数に保存
+  window.currentFields = fields
 }
 
 // AI項目抽出を実行
@@ -524,5 +586,112 @@ async function handleExtractFields(templateId) {
   } finally {
     extractBtn.disabled = false
     extractBtn.innerHTML = '<i class="fas fa-magic mr-2"></i>AI項目抽出を実行'
+  }
+}
+
+// フォームに含む/除外をトグル
+function toggleFieldInForm(fieldId, include) {
+  const statusElement = document.querySelector(`.include-status-${fieldId}`)
+  const row = document.querySelector(`tr[data-field-id="${fieldId}"]`)
+  
+  if (statusElement) {
+    if (include) {
+      statusElement.innerHTML = '<span class="text-green-600"><i class="fas fa-check-circle mr-1"></i>含む</span>'
+      row.classList.remove('bg-gray-50')
+    } else {
+      statusElement.innerHTML = '<span class="text-gray-400"><i class="fas fa-times-circle mr-1"></i>除外</span>'
+      row.classList.add('bg-gray-50')
+    }
+  }
+  
+  // currentFieldsを更新
+  if (window.currentFields) {
+    const field = window.currentFields.find(f => f.field_id === fieldId)
+    if (field) {
+      field.include_in_form = include ? 1 : 0
+    }
+  }
+  
+  updateIncludedCount()
+}
+
+// すべての項目を選択/解除
+function toggleAllFields(include) {
+  const checkboxes = document.querySelectorAll('.field-checkbox')
+  checkboxes.forEach(checkbox => {
+    checkbox.checked = include
+    const fieldId = parseInt(checkbox.getAttribute('data-field-id'))
+    toggleFieldInForm(fieldId, include)
+  })
+  
+  // 「すべて選択」チェックボックスも更新
+  const selectAllCheckbox = document.getElementById('selectAll')
+  if (selectAllCheckbox) {
+    selectAllCheckbox.checked = include
+  }
+}
+
+// フォームに含む項目数を更新
+function updateIncludedCount() {
+  const includedCount = document.getElementById('includedCount')
+  if (includedCount && window.currentFields) {
+    const count = window.currentFields.filter(f => f.include_in_form !== 0).length
+    includedCount.textContent = count
+  }
+}
+
+// 項目名を編集
+function editFieldName(fieldId, currentName) {
+  const newName = prompt('項目名を入力してください:', currentName)
+  if (newName && newName !== currentName) {
+    const nameElement = document.querySelector(`.field-name-${fieldId}`)
+    if (nameElement) {
+      nameElement.textContent = newName
+    }
+    
+    // currentFieldsを更新
+    if (window.currentFields) {
+      const field = window.currentFields.find(f => f.field_id === fieldId)
+      if (field) {
+        field.field_name = newName
+      }
+    }
+  }
+}
+
+// 変更を保存
+async function saveFieldChanges() {
+  if (!window.currentFields) {
+    alert('保存する変更がありません')
+    return
+  }
+  
+  const pathParts = window.location.pathname.split('/')
+  const templateId = pathParts[pathParts.length - 1]
+  
+  try {
+    // 変更された項目のみを送信
+    const fieldsToUpdate = window.currentFields.map(field => ({
+      field_id: field.field_id,
+      field_name: field.field_name,
+      include_in_form: field.include_in_form,
+      is_required: field.is_required
+    }))
+    
+    const { data } = await apiCall(`/api/templates/${templateId}/fields`, {
+      method: 'PATCH',
+      body: JSON.stringify({ fields: fieldsToUpdate })
+    })
+    
+    if (data.success) {
+      alert(data.message || '変更を保存しました')
+      // 項目一覧を再読み込み
+      await loadTemplateFields(templateId)
+    } else {
+      alert(data.error.message || '保存に失敗しました')
+    }
+  } catch (error) {
+    console.error('Save fields error:', error)
+    alert('保存に失敗しました')
   }
 }
