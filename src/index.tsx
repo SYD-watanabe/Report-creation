@@ -379,6 +379,7 @@ app.post('/api/db/init', async (c) => {
         calculation_formula TEXT,
         fixed_value TEXT,
         is_required INTEGER DEFAULT 0,
+        include_in_form INTEGER DEFAULT 1,
         display_order INTEGER NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (template_id) REFERENCES templates(template_id) ON DELETE CASCADE
