@@ -243,6 +243,73 @@ app.get('/dashboard', (c) => {
   )
 })
 
+// テンプレート詳細ページ
+app.get('/templates/:id', (c) => {
+  const templateId = c.req.param('id')
+  
+  return c.render(
+    <div class="min-h-screen">
+      <nav class="bg-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+          <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            帳票作成アプリ
+          </h1>
+          <div class="flex gap-4 items-center">
+            <a href="/dashboard" class="text-gray-600 hover:text-gray-800">
+              <i class="fas fa-arrow-left mr-2"></i>ダッシュボードへ戻る
+            </a>
+            <button id="logoutBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer">
+              ログアウト
+            </button>
+          </div>
+        </div>
+      </nav>
+      
+      <div class="max-w-7xl mx-auto px-4 py-8">
+        <div class="mb-8">
+          <h2 class="text-2xl font-bold mb-4" id="templateTitle">テンプレート詳細</h2>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <h3 class="text-lg font-bold mb-4">テンプレート情報</h3>
+          <div id="templateInfo" class="text-gray-600">
+            読み込み中...
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-bold">抽出された項目</h3>
+            <button 
+              id="extractBtn" 
+              class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition"
+            >
+              <i class="fas fa-magic mr-2"></i>AI項目抽出を実行
+            </button>
+          </div>
+          <div id="extractionStatus" class="hidden mb-4">
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4">
+              <p class="text-blue-700">
+                <i class="fas fa-spinner fa-spin mr-2"></i>
+                AI項目抽出中... しばらくお待ちください
+              </p>
+            </div>
+          </div>
+          <div id="fieldsList">
+            <p class="text-gray-500 text-center py-8">まだ項目が抽出されていません</p>
+          </div>
+        </div>
+      </div>
+      
+      <script src="/static/app.js"></script>
+      <script>{`
+        window.TEMPLATE_ID = '${templateId}'
+      `}</script>
+    </div>,
+    { title: 'テンプレート詳細 - 帳票作成アプリ' }
+  )
+})
+
 // APIルート
 app.get('/api/health', (c) => {
   return c.json({ success: true, message: 'API is working' })

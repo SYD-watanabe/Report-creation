@@ -147,6 +147,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (window.location.pathname === '/dashboard') {
     initDashboard()
   }
+  
+  // テンプレート詳細ページ
+  if (window.location.pathname.startsWith('/templates/')) {
+    initTemplateDetail()
+  }
 })
 
 // ダッシュボード初期化
@@ -341,4 +346,175 @@ function formatDate(dateString) {
     hour: '2-digit',
     minute: '2-digit'
   })
+}
+
+// テンプレート詳細ページ初期化
+async function initTemplateDetail() {
+  const templateId = window.TEMPLATE_ID
+  
+  // テンプレート情報を読み込み
+  await loadTemplateDetail(templateId)
+  
+  // 項目一覧を読み込み
+  await loadTemplateFields(templateId)
+  
+  // AI抽出ボタン
+  const extractBtn = document.getElementById('extractBtn')
+  if (extractBtn) {
+    extractBtn.addEventListener('click', () => handleExtractFields(templateId))
+  }
+}
+
+// テンプレート詳細を読み込み
+async function loadTemplateDetail(templateId) {
+  try {
+    const { data } = await apiCall(`/api/templates/${templateId}`)
+    
+    if (data.success) {
+      const template = data.data.template
+      
+      document.getElementById('templateTitle').textContent = template.template_name
+      document.getElementById('templateInfo').innerHTML = `
+        <div class="space-y-2">
+          <p><strong>ファイル形式:</strong> ${template.file_type.toUpperCase()}</p>
+          <p><strong>ファイルサイズ:</strong> ${formatFileSize(template.file_size)}</p>
+          <p><strong>作成した見積書:</strong> ${template.quotes_created}件</p>
+          <p><strong>作成日:</strong> ${formatDate(template.created_at)}</p>
+          <p><strong>更新日:</strong> ${formatDate(template.updated_at)}</p>
+        </div>
+      `
+    } else {
+      document.getElementById('templateInfo').innerHTML = '<p class="text-red-600">テンプレート情報の読み込みに失敗しました</p>'
+    }
+  } catch (error) {
+    console.error('Load template detail error:', error)
+    document.getElementById('templateInfo').innerHTML = '<p class="text-red-600">テンプレート情報の読み込みに失敗しました</p>'
+  }
+}
+
+// テンプレート項目を読み込み
+async function loadTemplateFields(templateId) {
+  try {
+    const { data } = await apiCall(`/api/templates/${templateId}`)
+    
+    if (data.success && data.data.fields && data.data.fields.length > 0) {
+      renderFields(data.data.fields)
+    } else {
+      document.getElementById('fieldsList').innerHTML = '<p class="text-gray-500 text-center py-8">まだ項目が抽出されていません</p>'
+    }
+  } catch (error) {
+    console.error('Load fields error:', error)
+  }
+}
+
+// 項目一覧を描画
+function renderFields(fields) {
+  const fieldsList = document.getElementById('fieldsList')
+  
+  if (!fieldsList) return
+  
+  if (fields.length === 0) {
+    fieldsList.innerHTML = '<p class="text-gray-500 text-center py-8">まだ項目が抽出されていません</p>'
+    return
+  }
+  
+  const fieldTypeLabels = {
+    'input': '入力項目',
+    'calc': '計算項目',
+    'fixed': '固定値'
+  }
+  
+  const dataTypeLabels = {
+    'text': 'テキスト',
+    'number': '数値',
+    'date': '日付'
+  }
+  
+  const fieldTypeColors = {
+    'input': 'bg-blue-100 text-blue-800',
+    'calc': 'bg-green-100 text-green-800',
+    'fixed': 'bg-gray-100 text-gray-800'
+  }
+  
+  fieldsList.innerHTML = `
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">順序</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">項目名</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">タイプ</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">データ型</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">セル位置</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">必須</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">計算式/固定値</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          ${fields.map(field => `
+            <tr>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${field.display_order}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${escapeHtml(field.field_name)}</td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${fieldTypeColors[field.field_type]}">
+                  ${fieldTypeLabels[field.field_type]}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${dataTypeLabels[field.data_type]}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${field.cell_position}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                ${field.is_required ? '<span class="text-red-600">必須</span>' : '任意'}
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-500">
+                ${field.calculation_formula ? `<code class="bg-gray-100 px-2 py-1 rounded">${escapeHtml(field.calculation_formula)}</code>` : ''}
+                ${field.fixed_value ? escapeHtml(field.fixed_value) : ''}
+                ${!field.calculation_formula && !field.fixed_value ? '-' : ''}
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div class="mt-4 text-sm text-gray-600">
+      <p>合計 ${fields.length} 項目</p>
+    </div>
+  `
+}
+
+// AI項目抽出を実行
+async function handleExtractFields(templateId) {
+  const extractBtn = document.getElementById('extractBtn')
+  const extractionStatus = document.getElementById('extractionStatus')
+  
+  if (!confirm('AI項目抽出を実行しますか？\n既存の項目情報は上書きされます。')) {
+    return
+  }
+  
+  try {
+    extractBtn.disabled = true
+    extractBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>抽出中...'
+    extractionStatus.classList.remove('hidden')
+    
+    const { data } = await apiCall(`/api/templates/${templateId}/extract`, {
+      method: 'POST'
+    })
+    
+    extractionStatus.classList.add('hidden')
+    
+    if (data.success) {
+      alert(`AI項目抽出が完了しました！\n\n抽出された項目数: ${data.data.total_fields}件\n信頼度: ${(data.data.confidence * 100).toFixed(0)}%`)
+      
+      // 項目一覧を再読み込み
+      await loadTemplateFields(templateId)
+    } else {
+      alert(data.error.message || 'AI項目抽出に失敗しました')
+    }
+  } catch (error) {
+    console.error('Extract fields error:', error)
+    alert('AI項目抽出に失敗しました')
+    extractionStatus.classList.add('hidden')
+  } finally {
+    extractBtn.disabled = false
+    extractBtn.innerHTML = '<i class="fas fa-magic mr-2"></i>AI項目抽出を実行'
+  }
 }

@@ -1,5 +1,7 @@
 import { Hono } from 'hono';
 import { Bindings, ApiResponse, Template } from '../types';
+import { analyzeExcelFile, generateExcelSummary } from '../utils/excel';
+import { extractFieldsWithGemini, convertToDbFields } from '../utils/gemini';
 
 const templates = new Hono<{ Bindings: Bindings }>();
 
@@ -289,6 +291,117 @@ templates.delete('/:id', async (c) => {
       error: {
         code: 'SERVER_ERROR',
         message: 'テンプレートの削除に失敗しました'
+      }
+    };
+    return c.json(response, 500);
+  }
+});
+
+// AI項目抽出
+templates.post('/:id/extract', async (c) => {
+  try {
+    const user = c.get('user');
+    const { env } = c;
+    const templateId = c.req.param('id');
+
+    // Gemini APIキーを確認
+    const geminiApiKey = env.GEMINI_API_KEY;
+    if (!geminiApiKey) {
+      const response: ApiResponse = {
+        success: false,
+        error: {
+          code: 'API_KEY_MISSING',
+          message: 'Gemini APIキーが設定されていません'
+        }
+      };
+      return c.json(response, 500);
+    }
+
+    // テンプレート情報を取得
+    const template = await env.DB.prepare(`
+      SELECT * FROM templates
+      WHERE template_id = ? AND user_id = ?
+    `).bind(templateId, user.user_id).first();
+
+    if (!template) {
+      const response: ApiResponse = {
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'テンプレートが見つかりません'
+        }
+      };
+      return c.json(response, 404);
+    }
+
+    // R2からファイルを取得
+    const file = await env.R2.get(template.file_path as string);
+    if (!file) {
+      const response: ApiResponse = {
+        success: false,
+        error: {
+          code: 'FILE_NOT_FOUND',
+          message: 'テンプレートファイルが見つかりません'
+        }
+      };
+      return c.json(response, 404);
+    }
+
+    // ファイルをArrayBufferとして読み込み
+    const arrayBuffer = await file.arrayBuffer();
+
+    // Excelファイルを解析
+    const analysis = await analyzeExcelFile(arrayBuffer);
+    const summary = generateExcelSummary(analysis);
+
+    // Gemini APIで項目を抽出
+    const extractionResult = await extractFieldsWithGemini(summary, geminiApiKey);
+
+    // 既存のフィールドを削除
+    await env.DB.prepare(`
+      DELETE FROM template_fields WHERE template_id = ?
+    `).bind(templateId).run();
+
+    // 抽出したフィールドをデータベースに保存
+    for (const field of extractionResult.fields) {
+      await env.DB.prepare(`
+        INSERT INTO template_fields (
+          template_id, field_name, field_type, data_type,
+          cell_position, calculation_formula, fixed_value,
+          is_required, display_order
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        templateId,
+        field.field_name,
+        field.field_type,
+        field.data_type,
+        field.cell_position,
+        field.calculation_formula || null,
+        field.fixed_value || null,
+        field.is_required,
+        field.display_order
+      ).run();
+    }
+
+    const response: ApiResponse = {
+      success: true,
+      message: 'AI項目抽出が完了しました',
+      data: {
+        fields: extractionResult.fields,
+        confidence: extractionResult.confidence,
+        suggestions: extractionResult.suggestions,
+        total_fields: extractionResult.fields.length
+      }
+    };
+
+    return c.json(response);
+  } catch (error: any) {
+    console.error('AI extraction error:', error);
+    const response: ApiResponse = {
+      success: false,
+      error: {
+        code: 'EXTRACTION_ERROR',
+        message: error.message || 'AI項目抽出に失敗しました'
       }
     };
     return c.json(response, 500);
