@@ -5,6 +5,8 @@ import { renderer } from './renderer'
 import type { Bindings } from './types'
 import authRoutes from './routes/auth'
 import templateRoutes from './routes/templates'
+import formRoutes from './routes/forms'
+import quoteRoutes from './routes/quotes'
 import { authenticate } from './middleware/auth'
 import { hashPassword } from './utils/auth'
 
@@ -22,6 +24,21 @@ app.route('/api/auth', authRoutes)
 // 認証が必要なAPIルート
 app.use('/api/templates/*', authenticate)
 app.route('/api/templates', templateRoutes)
+
+app.use('/api/quotes/*', authenticate)
+app.route('/api/quotes', quoteRoutes)
+
+// フォームAPIルート（一部認証不要）
+app.use('/api/forms/*', async (c, next) => {
+  const path = c.req.path;
+  // 公開フォーム関連は認証不要
+  if (path.match(/\/api\/forms\/[a-z0-9]+$/) || path.match(/\/api\/forms\/[a-z0-9]+\/submit$/)) {
+    return next();
+  }
+  // その他は認証必要
+  return authenticate(c, next);
+})
+app.route('/api/forms', formRoutes)
 
 // レンダラー適用
 app.use(renderer)
@@ -172,9 +189,17 @@ app.get('/dashboard', (c) => {
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
           <div class="flex justify-between items-center mb-6">
             <h3 class="text-lg font-bold">マイテンプレート</h3>
-            <button id="uploadBtn" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
-              <i class="fas fa-upload mr-2"></i>新しいテンプレートを作成
-            </button>
+            <div class="flex gap-2">
+              <a 
+                href="/quotes"
+                class="bg-green-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-700 transition"
+              >
+                <i class="fas fa-file-invoice mr-2"></i>見積書管理
+              </a>
+              <button id="uploadBtn" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
+                <i class="fas fa-upload mr-2"></i>新しいテンプレートを作成
+              </button>
+            </div>
           </div>
           <div id="templatesList">
             <p class="text-gray-500 text-center py-8">テンプレートがまだありません</p>
@@ -280,12 +305,20 @@ app.get('/templates/:id', (c) => {
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
           <div class="flex justify-between items-center mb-6">
             <h3 class="text-lg font-bold">抽出された項目</h3>
-            <button 
-              id="extractBtn" 
-              class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition"
-            >
-              <i class="fas fa-magic mr-2"></i>AI項目抽出を実行
-            </button>
+            <div class="flex gap-2">
+              <button 
+                id="manageFormsBtn"
+                class="bg-gradient-to-r from-green-600 to-teal-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition"
+              >
+                <i class="fas fa-clipboard-list mr-2"></i>フォーム管理
+              </button>
+              <button 
+                id="extractBtn" 
+                class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition"
+              >
+                <i class="fas fa-magic mr-2"></i>AI項目抽出を実行
+              </button>
+            </div>
           </div>
           <div id="extractionStatus" class="hidden mb-4">
             <div class="bg-blue-50 border-l-4 border-blue-500 p-4">
@@ -302,11 +335,215 @@ app.get('/templates/:id', (c) => {
       </div>
       
       <script src="/static/app.js"></script>
-      <script>{`
-        window.TEMPLATE_ID = '${templateId}'
-      `}</script>
+      <script dangerouslySetInnerHTML={{
+        __html: `window.TEMPLATE_ID = '${templateId}'`
+      }}></script>
     </div>,
     { title: 'テンプレート詳細 - 帳票作成アプリ' }
+  )
+})
+
+// 公開フォーム表示ページ
+app.get('/forms/:formUrl', (c) => {
+  const formUrl = c.req.param('formUrl')
+  
+  return c.render(
+    <div class="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+      <nav class="bg-white shadow-md">
+        <div class="max-w-3xl mx-auto px-4 py-4">
+          <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center">
+            帳票作成アプリ - フォーム入力
+          </h1>
+        </div>
+      </nav>
+      
+      <div class="max-w-3xl mx-auto px-4 py-8">
+        <div id="formContainer" class="bg-white rounded-xl shadow-lg p-8">
+          <div class="text-center py-12">
+            <i class="fas fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
+            <p class="text-gray-600">フォームを読み込み中...</p>
+          </div>
+        </div>
+        
+        <div id="successMessage" class="hidden mt-6 bg-green-50 border-l-4 border-green-500 p-6 rounded-lg">
+          <div class="flex items-center mb-2">
+            <i class="fas fa-check-circle text-green-600 text-2xl mr-3"></i>
+            <h3 class="text-lg font-bold text-green-800">送信完了！</h3>
+          </div>
+          <p class="text-green-700 mb-4">見積書を作成しました。</p>
+          <button 
+            onclick="window.location.reload()"
+            class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition"
+          >
+            <i class="fas fa-redo mr-2"></i>もう一度入力する
+          </button>
+        </div>
+      </div>
+      
+      <script dangerouslySetInnerHTML={{
+        __html: `window.FORM_URL = '${formUrl}'`
+      }}></script>
+      <script src="/static/forms.js"></script>
+    </div>,
+    { title: 'フォーム入力 - 帳票作成アプリ' }
+  )
+})
+
+// フォーム管理ページ
+app.get('/templates/:id/forms', (c) => {
+  const templateId = c.req.param('id')
+  
+  return c.render(
+    <div class="min-h-screen">
+      <nav class="bg-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+          <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            帳票作成アプリ
+          </h1>
+          <div class="flex gap-4 items-center">
+            <a href={`/templates/${templateId}`} class="text-gray-600 hover:text-gray-800">
+              <i class="fas fa-arrow-left mr-2"></i>テンプレート詳細へ戻る
+            </a>
+            <button id="logoutBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer">
+              ログアウト
+            </button>
+          </div>
+        </div>
+      </nav>
+      
+      <div class="max-w-7xl mx-auto px-4 py-8">
+        <div class="mb-8">
+          <h2 class="text-2xl font-bold mb-4">フォーム管理</h2>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-bold">フォーム一覧</h3>
+            <button 
+              id="createFormBtn" 
+              class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition"
+            >
+              <i class="fas fa-plus mr-2"></i>新しいフォームを作成
+            </button>
+          </div>
+          <div id="formsList">
+            <p class="text-gray-500 text-center py-8">読み込み中...</p>
+          </div>
+        </div>
+      </div>
+
+      {/* フォーム作成モーダル */}
+      <div id="createFormModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
+          <h3 class="text-2xl font-bold mb-6">フォームを作成</h3>
+          <form id="createFormForm">
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2">フォームタイトル</label>
+              <input 
+                type="text" 
+                name="form_title" 
+                required
+                class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                placeholder="例: 見積もり依頼フォーム"
+              />
+            </div>
+            <div class="mb-6">
+              <label class="block text-gray-700 mb-2">説明文（任意）</label>
+              <textarea 
+                name="form_description"
+                rows="3"
+                class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                placeholder="フォームの説明を入力してください"
+              ></textarea>
+            </div>
+            <div class="flex gap-4">
+              <button 
+                type="submit"
+                class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+              >
+                作成
+              </button>
+              <button 
+                type="button"
+                id="cancelCreateFormBtn"
+                class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-400 transition"
+              >
+                キャンセル
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <script src="/static/app.js"></script>
+      <script dangerouslySetInnerHTML={{
+        __html: `window.TEMPLATE_ID = '${templateId}'`
+      }}></script>
+    </div>,
+    { title: 'フォーム管理 - 帳票作成アプリ' }
+  )
+})
+
+// 見積書管理ページ
+app.get('/quotes', (c) => {
+  return c.render(
+    <div class="min-h-screen">
+      <nav class="bg-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+          <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            帳票作成アプリ
+          </h1>
+          <div class="flex gap-4 items-center">
+            <a href="/dashboard" class="text-gray-600 hover:text-gray-800">
+              <i class="fas fa-arrow-left mr-2"></i>ダッシュボードへ戻る
+            </a>
+            <button id="logoutBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer">
+              ログアウト
+            </button>
+          </div>
+        </div>
+      </nav>
+      
+      <div class="max-w-7xl mx-auto px-4 py-8">
+        <div class="mb-8">
+          <h2 class="text-2xl font-bold mb-4">見積書管理</h2>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-bold">見積書一覧</h3>
+            <div class="text-sm text-gray-600">
+              <span id="quoteCount">0</span>件の見積書
+            </div>
+          </div>
+          <div id="quotesList">
+            <p class="text-gray-500 text-center py-8">読み込み中...</p>
+          </div>
+        </div>
+      </div>
+
+      {/* 見積書詳細モーダル */}
+      <div id="quoteDetailModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-4xl m-4 max-h-[90vh] overflow-y-auto">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold">見積書詳細</h3>
+            <button 
+              id="closeDetailBtn"
+              class="text-gray-600 hover:text-gray-800 text-2xl"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div id="quoteDetailContent">
+            <p class="text-gray-500 text-center py-8">読み込み中...</p>
+          </div>
+        </div>
+      </div>
+      
+      <script src="/static/app.js"></script>
+      <script src="/static/quotes.js"></script>
+    </div>,
+    { title: '見積書管理 - 帳票作成アプリ' }
   )
 })
 

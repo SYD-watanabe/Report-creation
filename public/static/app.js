@@ -150,7 +150,12 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // テンプレート詳細ページ
   if (window.location.pathname.startsWith('/templates/')) {
-    initTemplateDetail()
+    // フォーム管理ページかテンプレート詳細ページか判定
+    if (window.location.pathname.endsWith('/forms')) {
+      initFormManagement()
+    } else {
+      initTemplateDetail()
+    }
   }
 })
 
@@ -370,6 +375,14 @@ async function initTemplateDetail() {
   const extractBtn = document.getElementById('extractBtn')
   if (extractBtn) {
     extractBtn.addEventListener('click', () => handleExtractFields(templateId))
+  }
+  
+  // フォーム管理ボタン
+  const manageFormsBtn = document.getElementById('manageFormsBtn')
+  if (manageFormsBtn) {
+    manageFormsBtn.addEventListener('click', () => {
+      window.location.href = `/templates/${templateId}/forms`
+    })
   }
 }
 
@@ -693,5 +706,227 @@ async function saveFieldChanges() {
   } catch (error) {
     console.error('Save fields error:', error)
     alert('保存に失敗しました')
+  }
+}
+
+// フォーム管理ページ初期化
+async function initFormManagement() {
+  const pathParts = window.location.pathname.split('/')
+  const templateId = pathParts[pathParts.length - 2]
+  
+  if (!templateId || templateId === 'templates') {
+    alert('テンプレートIDが不正です')
+    window.location.href = '/dashboard'
+    return
+  }
+  
+  // フォーム一覧を読み込み
+  await loadForms(templateId)
+  
+  // フォーム作成ボタン
+  const createFormBtn = document.getElementById('createFormBtn')
+  const createFormModal = document.getElementById('createFormModal')
+  const cancelCreateFormBtn = document.getElementById('cancelCreateFormBtn')
+  const createFormForm = document.getElementById('createFormForm')
+  
+  if (createFormBtn) {
+    createFormBtn.addEventListener('click', () => {
+      createFormModal.classList.remove('hidden')
+    })
+  }
+  
+  if (cancelCreateFormBtn) {
+    cancelCreateFormBtn.addEventListener('click', () => {
+      createFormModal.classList.add('hidden')
+      createFormForm.reset()
+    })
+  }
+  
+  if (createFormForm) {
+    createFormForm.addEventListener('submit', (e) => handleCreateForm(e, templateId))
+  }
+}
+
+// フォーム一覧を読み込み
+async function loadForms(templateId) {
+  try {
+    const { data } = await apiCall(`/api/forms/template/${templateId}`)
+    
+    if (data.success) {
+      renderForms(data.data.forms, templateId)
+    } else {
+      document.getElementById('formsList').innerHTML = '<p class="text-red-600 text-center py-8">フォーム一覧の読み込みに失敗しました</p>'
+    }
+  } catch (error) {
+    console.error('Load forms error:', error)
+    document.getElementById('formsList').innerHTML = '<p class="text-red-600 text-center py-8">フォーム一覧の読み込みに失敗しました</p>'
+  }
+}
+
+// フォーム一覧を描画
+function renderForms(forms, templateId) {
+  const formsList = document.getElementById('formsList')
+  
+  if (!formsList) return
+  
+  if (forms.length === 0) {
+    formsList.innerHTML = '<p class="text-gray-500 text-center py-8">まだフォームがありません</p>'
+    return
+  }
+  
+  formsList.innerHTML = forms.map(form => {
+    const publicUrl = `${window.location.origin}/forms/${form.form_url}`
+    const statusColor = form.is_active ? 'text-green-600' : 'text-gray-400'
+    const statusIcon = form.is_active ? 'fa-check-circle' : 'fa-times-circle'
+    const statusText = form.is_active ? '公開中' : '非公開'
+    
+    return `
+      <div class="border rounded-lg p-4 mb-4 hover:shadow-md transition">
+        <div class="flex justify-between items-start">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-2">
+              <h4 class="font-bold text-lg">${escapeHtml(form.form_title)}</h4>
+              <span class="${statusColor}">
+                <i class="fas ${statusIcon} mr-1"></i>${statusText}
+              </span>
+            </div>
+            ${form.form_description ? `<p class="text-gray-600 mb-3">${escapeHtml(form.form_description)}</p>` : ''}
+            <div class="text-sm text-gray-600 space-y-1">
+              <p><i class="fas fa-link mr-2"></i>URL: <a href="${publicUrl}" target="_blank" class="text-blue-600 hover:underline">${publicUrl}</a></p>
+              <p><i class="fas fa-eye mr-2"></i>アクセス数: ${form.access_count}回</p>
+              <p><i class="fas fa-paper-plane mr-2"></i>送信数: ${form.submission_count}件</p>
+              <p><i class="fas fa-clock mr-2"></i>作成日: ${formatDate(form.created_at)}</p>
+            </div>
+          </div>
+          <div class="flex flex-col gap-2 ml-4">
+            <button 
+              onclick="copyFormUrl('${publicUrl}')"
+              class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm whitespace-nowrap"
+            >
+              <i class="fas fa-copy"></i> URLコピー
+            </button>
+            <button 
+              onclick="toggleFormStatus(${form.form_id}, ${form.is_active ? 0 : 1}, ${templateId})"
+              class="${form.is_active ? 'bg-gray-600' : 'bg-green-600'} text-white px-4 py-2 rounded-lg hover:opacity-80 transition text-sm whitespace-nowrap"
+            >
+              <i class="fas ${form.is_active ? 'fa-eye-slash' : 'fa-eye'}"></i> ${form.is_active ? '非公開' : '公開'}
+            </button>
+            <button 
+              onclick="deleteForm(${form.form_id}, '${escapeHtml(form.form_title)}', ${templateId})"
+              class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition text-sm whitespace-nowrap"
+            >
+              <i class="fas fa-trash"></i> 削除
+            </button>
+          </div>
+        </div>
+      </div>
+    `
+  }).join('')
+}
+
+// フォームを作成
+async function handleCreateForm(event, templateId) {
+  event.preventDefault()
+  
+  const form = event.target
+  const formTitle = form.form_title.value
+  const formDescription = form.form_description.value
+  
+  try {
+    const submitBtn = form.querySelector('button[type="submit"]')
+    submitBtn.disabled = true
+    submitBtn.textContent = '作成中...'
+    
+    const { data } = await apiCall('/api/forms', {
+      method: 'POST',
+      body: JSON.stringify({
+        template_id: parseInt(templateId),
+        form_title: formTitle,
+        form_description: formDescription || null
+      })
+    })
+    
+    if (data.success) {
+      alert('フォームを作成しました！')
+      document.getElementById('createFormModal').classList.add('hidden')
+      form.reset()
+      
+      // フォーム一覧を再読み込み
+      await loadForms(templateId)
+      
+      // 公開URLを表示
+      const publicUrl = `${window.location.origin}${data.data.public_url}`
+      if (confirm(`フォームを作成しました！\n\n公開URL: ${publicUrl}\n\nURLをコピーしますか？`)) {
+        copyFormUrl(publicUrl)
+      }
+    } else {
+      alert(data.error.message || 'フォームの作成に失敗しました')
+    }
+  } catch (error) {
+    console.error('Create form error:', error)
+    alert('フォームの作成に失敗しました')
+  } finally {
+    const submitBtn = form.querySelector('button[type="submit"]')
+    submitBtn.disabled = false
+    submitBtn.textContent = '作成'
+  }
+}
+
+// フォームURLをコピー
+function copyFormUrl(url) {
+  navigator.clipboard.writeText(url).then(() => {
+    alert('URLをコピーしました！')
+  }).catch(err => {
+    console.error('Copy failed:', err)
+    prompt('URLをコピーしてください:', url)
+  })
+}
+
+// フォーム状態を切り替え
+async function toggleFormStatus(formId, isActive, templateId) {
+  const action = isActive ? '公開' : '非公開'
+  
+  if (!confirm(`フォームを${action}にしますか？`)) {
+    return
+  }
+  
+  try {
+    const { data } = await apiCall(`/api/forms/${formId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ is_active: isActive })
+    })
+    
+    if (data.success) {
+      alert(`フォームを${action}にしました`)
+      await loadForms(templateId)
+    } else {
+      alert(data.error.message || '更新に失敗しました')
+    }
+  } catch (error) {
+    console.error('Toggle form status error:', error)
+    alert('更新に失敗しました')
+  }
+}
+
+// フォームを削除
+async function deleteForm(formId, formTitle, templateId) {
+  if (!confirm(`フォーム「${formTitle}」を削除してもよろしいですか？\nこの操作は取り消せません。`)) {
+    return
+  }
+  
+  try {
+    const { data } = await apiCall(`/api/forms/${formId}`, {
+      method: 'DELETE'
+    })
+    
+    if (data.success) {
+      alert('フォームを削除しました')
+      await loadForms(templateId)
+    } else {
+      alert(data.error.message || '削除に失敗しました')
+    }
+  } catch (error) {
+    console.error('Delete form error:', error)
+    alert('削除に失敗しました')
   }
 }
