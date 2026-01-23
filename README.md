@@ -10,6 +10,7 @@ ExcelテンプレートからAIで項目を自動抽出し、見積書を自動�
 
 ## 🌐 URLs
 
+- **本番環境**: https://10f28fc1.webapp-bhm.pages.dev
 - **開発環境**: https://3000-i33nb43dtt3rbqdym56j6-c07dda5e.sandbox.novita.ai
 - **GitHub**: https://github.com/SYD-watanabe/Report-creation
 
