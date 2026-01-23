@@ -7,6 +7,7 @@ import authRoutes from './routes/auth'
 import templateRoutes from './routes/templates'
 import formRoutes from './routes/forms'
 import quoteRoutes from './routes/quotes'
+import adminRoutes from './routes/admin'
 import { authenticate } from './middleware/auth'
 import { hashPassword } from './utils/auth'
 
@@ -27,6 +28,9 @@ app.route('/api/templates', templateRoutes)
 
 app.use('/api/quotes/*', authenticate)
 app.route('/api/quotes', quoteRoutes)
+
+// 管理者APIルート（注意：本番環境では適切な管理者認証を追加してください）
+app.route('/api/admin', adminRoutes)
 
 // フォームAPIルート（一部認証不要）
 app.use('/api/forms/*', async (c, next) => {
@@ -265,6 +269,148 @@ app.get('/dashboard', (c) => {
       `}</script>
     </div>,
     { title: 'ダッシュボード - 帳票作成アプリ' }
+  )
+})
+
+// 管理ダッシュボードページ
+app.get('/admin', (c) => {
+  return c.render(
+    <div class="min-h-screen bg-gray-50">
+      {/* ナビゲーションバー */}
+      <nav class="bg-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-800">
+              <i class="fas fa-user-shield mr-2"></i>管理ダッシュボード
+            </h1>
+          </div>
+          <div class="flex gap-4">
+            <a href="/dashboard" class="text-gray-600 hover:text-gray-800">
+              <i class="fas fa-home mr-2"></i>通常ダッシュボード
+            </a>
+            <button id="logoutBtn" class="text-red-600 hover:text-red-800">
+              <i class="fas fa-sign-out-alt mr-2"></i>ログアウト
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      <div class="max-w-7xl mx-auto px-4 py-8">
+        {/* 統計情報カード */}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-gray-600 text-sm">総ユーザー数</p>
+                <p id="totalUsers" class="text-3xl font-bold text-blue-600">0</p>
+              </div>
+              <i class="fas fa-users text-4xl text-blue-200"></i>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-gray-600 text-sm">テンプレート数</p>
+                <p id="totalTemplates" class="text-3xl font-bold text-green-600">0</p>
+              </div>
+              <i class="fas fa-file-excel text-4xl text-green-200"></i>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-gray-600 text-sm">フォーム数</p>
+                <p id="totalForms" class="text-3xl font-bold text-purple-600">0</p>
+                <p class="text-xs text-gray-500">
+                  アクティブ: <span id="activeForms">0</span>
+                </p>
+              </div>
+              <i class="fas fa-wpforms text-4xl text-purple-200"></i>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-gray-600 text-sm">見積書数</p>
+                <p id="totalQuotes" class="text-3xl font-bold text-orange-600">0</p>
+              </div>
+              <i class="fas fa-file-invoice text-4xl text-orange-200"></i>
+            </div>
+          </div>
+        </div>
+
+        {/* プラン別ユーザー数 */}
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+          <h2 class="text-xl font-bold mb-4">プラン別ユーザー数</h2>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="text-center p-4 bg-gray-50 rounded-lg">
+              <p class="text-gray-600 mb-2">無料プラン</p>
+              <p id="freeUsers" class="text-3xl font-bold text-gray-700">0</p>
+            </div>
+            <div class="text-center p-4 bg-purple-50 rounded-lg">
+              <p class="text-gray-600 mb-2">プレミアムプラン</p>
+              <p id="premiumUsers" class="text-3xl font-bold text-purple-700">0</p>
+            </div>
+          </div>
+        </div>
+
+        {/* ユーザー一覧 */}
+        <div class="bg-white rounded-lg shadow p-6">
+          <h2 class="text-xl font-bold mb-4">
+            <i class="fas fa-users mr-2"></i>ユーザー一覧
+          </h2>
+          <div id="usersList">
+            <p class="text-gray-500 text-center py-8">読み込み中...</p>
+          </div>
+        </div>
+      </div>
+
+      <script src="/static/app.js"></script>
+      <script src="/static/admin.js"></script>
+    </div>,
+    { title: '管理ダッシュボード - 帳票作成アプリ' }
+  )
+})
+
+// ユーザー詳細ページ
+app.get('/admin/user/:userId', (c) => {
+  const userId = c.req.param('userId')
+  
+  return c.render(
+    <div class="min-h-screen bg-gray-50">
+      {/* ナビゲーションバー */}
+      <nav class="bg-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-800">
+              <i class="fas fa-user mr-2"></i>ユーザー詳細
+            </h1>
+          </div>
+          <div class="flex gap-4">
+            <a href="/admin" class="text-blue-600 hover:text-blue-800">
+              <i class="fas fa-arrow-left mr-2"></i>管理ダッシュボードに戻る
+            </a>
+            <button id="logoutBtn" class="text-red-600 hover:text-red-800">
+              <i class="fas fa-sign-out-alt mr-2"></i>ログアウト
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      <div class="max-w-7xl mx-auto px-4 py-8">
+        <div id="userDetailContent">
+          <p class="text-gray-500 text-center py-8">読み込み中...</p>
+        </div>
+      </div>
+
+      <script src="/static/app.js"></script>
+      <script src="/static/admin.js"></script>
+      <script dangerouslySetInnerHTML={{ __html: `window.USER_ID = '${userId}'` }}></script>
+    </div>,
+    { title: 'ユーザー詳細 - 管理ダッシュボード' }
   )
 })
 
