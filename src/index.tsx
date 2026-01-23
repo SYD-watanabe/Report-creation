@@ -53,7 +53,7 @@ app.get('/', (c) => {
     <div class="min-h-screen flex items-center justify-center p-4">
       <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
         <h1 class="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          帳票作成アプリ
+          エクセルまもる君
         </h1>
         <form id="loginForm">
           <div class="mb-4">
@@ -89,7 +89,7 @@ app.get('/', (c) => {
       </div>
       <script src="/static/app.js"></script>
     </div>,
-    { title: 'ログイン - 帳票作成アプリ' }
+    { title: 'ログイン - エクセルまもる君' }
   )
 })
 
@@ -153,7 +153,7 @@ app.get('/register', (c) => {
       </div>
       <script src="/static/app.js"></script>
     </div>,
-    { title: '新規登録 - 帳票作成アプリ' }
+    { title: '新規登録 - エクセルまもる君' }
   )
 })
 
@@ -163,12 +163,22 @@ app.get('/dashboard', (c) => {
     <div class="min-h-screen">
       <nav class="bg-white shadow-md">
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            帳票作成アプリ
-          </h1>
-          <button id="logoutBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer">
-            ログアウト
-          </button>
+          <a href="/dashboard" class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent hover:opacity-80 transition cursor-pointer">
+            エクセルまもる君
+          </a>
+          <div class="flex gap-4 items-center">
+            <a 
+              href="https://www.netpr.biz/report-creation-orderform" 
+              target="_blank"
+              rel="noopener noreferrer"
+              class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition"
+            >
+              プランアップグレード
+            </a>
+            <button id="logoutBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer">
+              ログアウト
+            </button>
+          </div>
         </div>
       </nav>
       
@@ -268,7 +278,7 @@ app.get('/dashboard', (c) => {
         }
       `}</script>
     </div>,
-    { title: 'ダッシュボード - 帳票作成アプリ' }
+    { title: 'ダッシュボード - エクセルまもる君' }
   )
 })
 
@@ -280,11 +290,19 @@ app.get('/admin', (c) => {
       <nav class="bg-white shadow-md">
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <div>
-            <h1 class="text-2xl font-bold text-gray-800">
-              <i class="fas fa-user-shield mr-2"></i>管理ダッシュボード
-            </h1>
+            <a href="/dashboard" class="text-2xl font-bold text-gray-800 hover:opacity-80 transition cursor-pointer">
+              <i class="fas fa-user-shield mr-2"></i>エクセルまもる君 - 管理
+            </a>
           </div>
           <div class="flex gap-4">
+            <a 
+              href="https://www.netpr.biz/report-creation-orderform" 
+              target="_blank"
+              rel="noopener noreferrer"
+              class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition"
+            >
+              プランアップグレード
+            </a>
             <a href="/dashboard" class="text-gray-600 hover:text-gray-800">
               <i class="fas fa-home mr-2"></i>通常ダッシュボード
             </a>
@@ -371,7 +389,7 @@ app.get('/admin', (c) => {
       <script src="/static/app.js"></script>
       <script src="/static/admin.js"></script>
     </div>,
-    { title: '管理ダッシュボード - 帳票作成アプリ' }
+    { title: '管理ダッシュボード - エクセルまもる君' }
   )
 })
 
@@ -385,11 +403,19 @@ app.get('/admin/user/:userId', (c) => {
       <nav class="bg-white shadow-md">
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <div>
-            <h1 class="text-2xl font-bold text-gray-800">
-              <i class="fas fa-user mr-2"></i>ユーザー詳細
-            </h1>
+            <a href="/dashboard" class="text-2xl font-bold text-gray-800 hover:opacity-80 transition cursor-pointer">
+              <i class="fas fa-user mr-2"></i>エクセルまもる君 - ユーザー詳細
+            </a>
           </div>
           <div class="flex gap-4">
+            <a 
+              href="https://www.netpr.biz/report-creation-orderform" 
+              target="_blank"
+              rel="noopener noreferrer"
+              class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition"
+            >
+              プランアップグレード
+            </a>
             <a href="/admin" class="text-blue-600 hover:text-blue-800">
               <i class="fas fa-arrow-left mr-2"></i>管理ダッシュボードに戻る
             </a>
@@ -410,7 +436,7 @@ app.get('/admin/user/:userId', (c) => {
       <script src="/static/admin.js"></script>
       <script dangerouslySetInnerHTML={{ __html: `window.USER_ID = '${userId}'` }}></script>
     </div>,
-    { title: 'ユーザー詳細 - 管理ダッシュボード' }
+    { title: 'ユーザー詳細 - エクセルまもる君' }
   )
 })
 
@@ -422,10 +448,18 @@ app.get('/templates/:id', (c) => {
     <div class="min-h-screen">
       <nav class="bg-white shadow-md">
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            帳票作成アプリ
-          </h1>
+          <a href="/dashboard" class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent hover:opacity-80 transition cursor-pointer">
+            エクセルまもる君
+          </a>
           <div class="flex gap-4 items-center">
+            <a 
+              href="https://www.netpr.biz/report-creation-orderform" 
+              target="_blank"
+              rel="noopener noreferrer"
+              class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition"
+            >
+              プランアップグレード
+            </a>
             <a href="/dashboard" class="text-gray-600 hover:text-gray-800">
               <i class="fas fa-arrow-left mr-2"></i>ダッシュボードへ戻る
             </a>
@@ -485,7 +519,7 @@ app.get('/templates/:id', (c) => {
         __html: `window.TEMPLATE_ID = '${templateId}'`
       }}></script>
     </div>,
-    { title: 'テンプレート詳細 - 帳票作成アプリ' }
+    { title: 'テンプレート詳細 - エクセルまもる君' }
   )
 })
 
@@ -498,7 +532,7 @@ app.get('/forms/:formUrl', (c) => {
       <nav class="bg-white shadow-md">
         <div class="max-w-3xl mx-auto px-4 py-4">
           <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center">
-            帳票作成アプリ - フォーム入力
+            エクセルまもる君 - フォーム入力
           </h1>
         </div>
       </nav>
@@ -531,7 +565,7 @@ app.get('/forms/:formUrl', (c) => {
       }}></script>
       <script src="/static/forms.js"></script>
     </div>,
-    { title: 'フォーム入力 - 帳票作成アプリ' }
+    { title: 'フォーム入力 - エクセルまもる君' }
   )
 })
 
@@ -543,10 +577,18 @@ app.get('/templates/:id/forms', (c) => {
     <div class="min-h-screen">
       <nav class="bg-white shadow-md">
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            帳票作成アプリ
-          </h1>
+          <a href="/dashboard" class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent hover:opacity-80 transition cursor-pointer">
+            エクセルまもる君
+          </a>
           <div class="flex gap-4 items-center">
+            <a 
+              href="https://www.netpr.biz/report-creation-orderform" 
+              target="_blank"
+              rel="noopener noreferrer"
+              class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition"
+            >
+              プランアップグレード
+            </a>
             <a href={`/templates/${templateId}`} class="text-gray-600 hover:text-gray-800">
               <i class="fas fa-arrow-left mr-2"></i>テンプレート詳細へ戻る
             </a>
@@ -626,7 +668,7 @@ app.get('/templates/:id/forms', (c) => {
         __html: `window.TEMPLATE_ID = '${templateId}'`
       }}></script>
     </div>,
-    { title: 'フォーム管理 - 帳票作成アプリ' }
+    { title: 'フォーム管理 - エクセルまもる君' }
   )
 })
 
@@ -636,10 +678,18 @@ app.get('/quotes', (c) => {
     <div class="min-h-screen">
       <nav class="bg-white shadow-md">
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            帳票作成アプリ
-          </h1>
+          <a href="/dashboard" class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent hover:opacity-80 transition cursor-pointer">
+            エクセルまもる君
+          </a>
           <div class="flex gap-4 items-center">
+            <a 
+              href="https://www.netpr.biz/report-creation-orderform" 
+              target="_blank"
+              rel="noopener noreferrer"
+              class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition"
+            >
+              プランアップグレード
+            </a>
             <a href="/dashboard" class="text-gray-600 hover:text-gray-800">
               <i class="fas fa-arrow-left mr-2"></i>ダッシュボードへ戻る
             </a>
@@ -689,7 +739,7 @@ app.get('/quotes', (c) => {
       <script src="/static/app.js"></script>
       <script src="/static/quotes.js"></script>
     </div>,
-    { title: '見積書管理 - 帳票作成アプリ' }
+    { title: '見積書管理 - エクセルまもる君' }
   )
 })
 
