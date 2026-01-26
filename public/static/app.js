@@ -275,9 +275,6 @@ async function handleTemplateUpload(event) {
       const user = JSON.parse(localStorage.getItem('user'))
       user.templates_created = (user.templates_created || 0) + 1
       localStorage.setItem('user', JSON.stringify(user))
-      
-      // プランステータスを更新
-      document.getElementById('planStatus').textContent = `テンプレート: ${user.templates_created} / 1 使用中`
     } else {
       alert(data.error.message || 'アップロードに失敗しました')
     }
@@ -317,9 +314,6 @@ async function deleteTemplate(templateId, templateName) {
       const user = JSON.parse(localStorage.getItem('user'))
       user.templates_created = Math.max(0, (user.templates_created || 0) - 1)
       localStorage.setItem('user', JSON.stringify(user))
-      
-      // プランステータスを更新
-      document.getElementById('planStatus').textContent = `テンプレート: ${user.templates_created} / 1 使用中`
     } else {
       alert(data.error.message || '削除に失敗しました')
     }
