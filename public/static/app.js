@@ -264,20 +264,17 @@ async function handleTemplateUpload(event) {
     })
     
     if (data.success) {
-      alert('テンプレートをアップロードしました')
-      document.getElementById('uploadModal').classList.add('hidden')
-      form.reset()
-      
-      // テンプレート一覧を再読み込み
-      await loadTemplates()
+      // アップロード成功メッセージ
+      alert('テンプレートをアップロードしました。AI項目抽出を自動で開始します。')
       
       // ユーザー情報を更新
       const user = JSON.parse(localStorage.getItem('user'))
       user.templates_created = (user.templates_created || 0) + 1
       localStorage.setItem('user', JSON.stringify(user))
       
-      // プランステータスを更新
-      document.getElementById('planStatus').textContent = `テンプレート: ${user.templates_created} / 1 使用中`
+      // テンプレート詳細ページへ遷移（AI抽出を自動実行）
+      const templateId = data.data.template_id
+      window.location.href = `/templates/${templateId}?autoExtract=true`
     } else {
       alert(data.error.message || 'アップロードに失敗しました')
     }
@@ -371,10 +368,25 @@ async function initTemplateDetail() {
   // 項目一覧を読み込み
   await loadTemplateFields(templateId)
   
+  // URLパラメータをチェック（autoExtract=true）
+  const urlParams = new URLSearchParams(window.location.search)
+  const autoExtract = urlParams.get('autoExtract')
+  
   // AI抽出ボタン
   const extractBtn = document.getElementById('extractBtn')
   if (extractBtn) {
     extractBtn.addEventListener('click', () => handleExtractFields(templateId))
+  }
+  
+  // autoExtract=trueの場合、自動でAI抽出を実行
+  if (autoExtract === 'true' && extractBtn) {
+    // URLパラメータをクリア
+    window.history.replaceState({}, '', `/templates/${templateId}`)
+    
+    // 少し待ってからAI抽出を自動実行
+    setTimeout(() => {
+      handleExtractFields(templateId, true) // 自動実行フラグを追加
+    }, 500)
   }
   
   // フォーム管理ボタン
@@ -565,11 +577,12 @@ function renderFields(fields) {
 }
 
 // AI項目抽出を実行
-async function handleExtractFields(templateId) {
+async function handleExtractFields(templateId, autoRun = false) {
   const extractBtn = document.getElementById('extractBtn')
   const extractionStatus = document.getElementById('extractionStatus')
   
-  if (!confirm('AI項目抽出を実行しますか？\n既存の項目情報は上書きされます。')) {
+  // 手動実行の場合は確認ダイアログを表示
+  if (!autoRun && !confirm('AI項目抽出を実行しますか？\n既存の項目情報は上書きされます。')) {
     return
   }
   
