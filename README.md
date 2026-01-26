@@ -1,18 +1,20 @@
-# 帳票作成アプリ - MVP版
+# エクセルまもる君 - MVP版
 
 ExcelテンプレートからAIで項目を自動抽出し、見積書を自動生成するWebアプリケーション
 
 ## 📋 プロジェクト概要
 
-- **目的**: Excelの見積書テンプレートをアップロードして、AIで項目を自動抽出し、入力フォームを生成。フォーム入力から見積書PDFを自動作成。
+- **サービス名**: エクセルまもる君
+- **目的**: Excelの見積書テンプレートをアップロードして、AIで項目を自動抽出し、入力フォームを生成。フォーム入力から見積書Excelを自動作成。
 - **技術スタック**: Cloudflare Pages + Hono + TypeScript + Gemini API
 - **ターゲット**: 中小企業の営業・経理担当者
 
 ## 🌐 URLs
 
-- **本番環境**: https://10f28fc1.webapp-bhm.pages.dev
+- **本番環境**: https://98f26937.webapp-bhm.pages.dev
 - **開発環境**: https://3000-i33nb43dtt3rbqdym56j6-c07dda5e.sandbox.novita.ai
 - **GitHub**: https://github.com/SYD-watanabe/Report-creation
+- **プランアップグレード**: https://www.netpr.biz/report-creation-orderform
 
 ## ✅ 完了した機能
 
@@ -246,6 +248,6 @@ a2600d6 Add template management feature (upload, list, delete)
 
 ---
 
-**最終更新日**: 2026-01-19
-**バージョン**: MVP v0.3.0
-**ステータス**: ✅ AI項目抽出機能実装完了
+**最終更新日**: 2026-01-26
+**バージョン**: MVP v0.5.0
+**ステータス**: ✅ 本番環境デプロイ完了（エクセルまもる君としてリブランディング）
