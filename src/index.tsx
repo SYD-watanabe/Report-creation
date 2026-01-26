@@ -188,19 +188,6 @@ app.get('/dashboard', (c) => {
         </div>
         
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <h3 class="text-lg font-bold mb-4">現在のプラン</h3>
-          <div class="flex justify-between items-center">
-            <div>
-              <p class="text-xl font-bold" id="planName">無料プラン</p>
-              <p class="text-gray-600" id="planStatus">テンプレート: 0 / 1 使用中</p>
-            </div>
-            <button id="upgradeBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition">
-              プレミアムプランにアップグレード
-            </button>
-          </div>
-        </div>
-        
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
           <div class="flex justify-between items-center mb-6">
             <h3 class="text-lg font-bold">マイテンプレート</h3>
             <div class="flex gap-2">
