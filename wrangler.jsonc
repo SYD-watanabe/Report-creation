@@ -12,5 +12,11 @@
       "database_name": "webapp-production",
       "database_id": "8d8b0dd4-3e00-4bcb-abd6-c66a3abc3bb9"
     }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "R2",
+      "bucket_name": "webapp-templates"
+    }
   ]
 }
