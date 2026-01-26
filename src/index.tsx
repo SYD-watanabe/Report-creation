@@ -22,6 +22,9 @@ app.use('/static/*', serveStatic({ root: './public' }))
 // APIルート
 app.route('/api/auth', authRoutes)
 
+// 認証が必要なauthエンドポイント
+app.use('/api/auth/update-profile', authenticate)
+
 // 認証が必要なAPIルート
 app.use('/api/templates/*', authenticate)
 app.route('/api/templates', templateRoutes)
@@ -175,6 +178,9 @@ app.get('/dashboard', (c) => {
             >
               プランアップグレード
             </a>
+            <button id="accountBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer">
+              <i class="fas fa-user-circle mr-1"></i>アカウント情報
+            </button>
             <button id="logoutBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer">
               ログアウト
             </button>
@@ -244,6 +250,50 @@ app.get('/dashboard', (c) => {
               <button 
                 type="button"
                 id="cancelUploadBtn"
+                class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-400 transition"
+              >
+                キャンセル
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {/* アカウント情報モーダル */}
+      <div id="accountModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
+          <h3 class="text-2xl font-bold mb-6">アカウント情報</h3>
+          <form id="accountForm">
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2">メールアドレス</label>
+              <input 
+                type="email" 
+                id="accountEmail"
+                disabled
+                class="w-full px-4 py-3 border rounded-lg bg-gray-100 text-gray-600"
+              />
+            </div>
+            <div class="mb-6">
+              <label class="block text-gray-700 mb-2">ユーザー名</label>
+              <input 
+                type="text" 
+                id="accountName"
+                name="name"
+                required
+                class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                placeholder="ユーザー名を入力"
+              />
+            </div>
+            <div class="flex gap-4">
+              <button 
+                type="submit"
+                class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+              >
+                変更を保存
+              </button>
+              <button 
+                type="button"
+                id="cancelAccountBtn"
                 class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-400 transition"
               >
                 キャンセル

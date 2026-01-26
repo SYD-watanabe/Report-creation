@@ -254,4 +254,73 @@ auth.get('/me', async (c) => {
   }
 })
 
+/**
+ * PUT /api/auth/update-profile
+ * プロフィール更新（認証必須）
+ */
+auth.put('/update-profile', async (c) => {
+  try {
+    const user = c.get('user')
+    
+    if (!user) {
+      return c.json<ApiResponse>({
+        success: false,
+        error: {
+          code: 'UNAUTHORIZED',
+          message: '認証が必要です'
+        }
+      }, 401)
+    }
+
+    const { name } = await c.req.json()
+    
+    // バリデーション
+    if (!name || !name.trim()) {
+      return c.json<ApiResponse>({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'ユーザー名は必須です'
+        }
+      }, 400)
+    }
+    
+    // ユーザー名を更新
+    await c.env.DB.prepare(`
+      UPDATE users 
+      SET name = ?, updated_at = CURRENT_TIMESTAMP 
+      WHERE user_id = ?
+    `).bind(name.trim(), user.user_id).run()
+    
+    // 更新後のユーザー情報を取得
+    const updatedUser = await c.env.DB.prepare(
+      'SELECT user_id, email, name, current_plan, templates_created FROM users WHERE user_id = ?'
+    ).bind(user.user_id).first<User>()
+    
+    return c.json<ApiResponse>({
+      success: true,
+      message: 'プロフィールを更新しました',
+      data: {
+        user: {
+          user_id: updatedUser!.user_id,
+          email: updatedUser!.email,
+          name: updatedUser!.name,
+          current_plan: updatedUser!.current_plan,
+          templates_created: updatedUser!.templates_created
+        }
+      }
+    })
+    
+  } catch (error: any) {
+    console.error('Update profile error:', error)
+    return c.json<ApiResponse>({
+      success: false,
+      error: {
+        code: 'SERVER_ERROR',
+        message: 'サーバーエラーが発生しました'
+      }
+    }, 500)
+  }
+})
+
 export default auth

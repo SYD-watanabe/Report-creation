@@ -186,6 +186,32 @@ async function initDashboard() {
   if (uploadForm) {
     uploadForm.addEventListener('submit', handleTemplateUpload)
   }
+
+  // アカウント情報ボタン
+  const accountBtn = document.getElementById('accountBtn')
+  const accountModal = document.getElementById('accountModal')
+  const cancelAccountBtn = document.getElementById('cancelAccountBtn')
+  const accountForm = document.getElementById('accountForm')
+
+  if (accountBtn) {
+    accountBtn.addEventListener('click', () => {
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      document.getElementById('accountEmail').value = user.email || ''
+      document.getElementById('accountName').value = user.name || ''
+      accountModal.classList.remove('hidden')
+    })
+  }
+
+  if (cancelAccountBtn) {
+    cancelAccountBtn.addEventListener('click', () => {
+      accountModal.classList.add('hidden')
+      accountForm.reset()
+    })
+  }
+
+  if (accountForm) {
+    accountForm.addEventListener('submit', handleSaveAccount)
+  }
 }
 
 // テンプレート一覧を読み込み
@@ -941,5 +967,42 @@ async function deleteForm(formId, formTitle, templateId) {
   } catch (error) {
     console.error('Delete form error:', error)
     alert('削除に失敗しました')
+  }
+}
+
+// アカウント情報を保存
+async function handleSaveAccount(e) {
+  e.preventDefault()
+  
+  const name = document.getElementById('accountName').value.trim()
+  
+  if (!name) {
+    alert('ユーザー名を入力してください')
+    return
+  }
+  
+  try {
+    const { data } = await apiCall('/api/auth/update-profile', {
+      method: 'PUT',
+      body: JSON.stringify({ name })
+    })
+    
+    if (data.success) {
+      // LocalStorageのユーザー情報を更新
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      user.name = name
+      localStorage.setItem('user', JSON.stringify(user))
+      
+      // 画面の表示を更新
+      document.getElementById('userGreeting').textContent = 'こんにちは、' + name + 'さん'
+      
+      alert('アカウント情報を更新しました')
+      document.getElementById('accountModal').classList.add('hidden')
+    } else {
+      alert(data.error?.message || '更新に失敗しました')
+    }
+  } catch (error) {
+    console.error('Save account error:', error)
+    alert('更新に失敗しました')
   }
 }
