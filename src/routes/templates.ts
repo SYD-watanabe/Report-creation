@@ -551,13 +551,18 @@ templates.get('/:id/preview', async (c) => {
     const { env } = c;
     const templateId = c.req.param('id');
 
+    console.log('Preview request:', { templateId, userId: user.user_id });
+
     // テンプレート情報を取得
     const template = await env.DB.prepare(`
       SELECT file_path, file_type FROM templates
       WHERE template_id = ? AND user_id = ?
     `).bind(templateId, user.user_id).first();
 
+    console.log('Template found:', template);
+
     if (!template) {
+      console.log('Template not found');
       return c.json({
         success: false,
         error: { code: 'NOT_FOUND', message: 'テンプレートが見つかりません' }
@@ -565,22 +570,41 @@ templates.get('/:id/preview', async (c) => {
     }
 
     // R2からExcelファイルを取得
+    console.log('Fetching file from R2:', template.file_path);
     const file = await env.R2.get(template.file_path as string);
     if (!file) {
+      console.log('File not found in R2');
       return c.json({
         success: false,
         error: { code: 'FILE_NOT_FOUND', message: 'ファイルが見つかりません' }
       }, 404);
     }
 
+    console.log('File fetched, size:', file.size);
+
     // ExcelJSでファイルを読み込み
+    console.log('Loading Excel file...');
     const ExcelJS = await import('exceljs');
     const workbook = new ExcelJS.Workbook();
     const buffer = await file.arrayBuffer();
+    
+    console.log('Buffer size:', buffer.byteLength);
     await workbook.xlsx.load(buffer);
+
+    console.log('Workbook loaded, sheets:', workbook.worksheets.length);
 
     // 最初のシートを取得
     const worksheet = workbook.worksheets[0];
+    if (!worksheet) {
+      console.log('No worksheet found');
+      return c.json({
+        success: false,
+        error: { code: 'NO_WORKSHEET', message: 'ワークシートが見つかりません' }
+      }, 400);
+    }
+
+    console.log('Processing worksheet:', worksheet.name);
+
     const cells: any[] = [];
     const merges: any[] = [];
     const rowHeights: any = {};
@@ -598,6 +622,8 @@ templates.get('/:id/preview', async (c) => {
     const actualCols = worksheet.actualColumnCount || worksheet.columnCount;
     const maxRows = Math.min(actualRows, 200);
     const maxCols = Math.min(actualCols, 100);
+
+    console.log('Processing cells:', { maxRows, maxCols });
 
     // 列の幅を取得
     worksheet.columns.forEach((col: any, index: number) => {
@@ -662,6 +688,8 @@ templates.get('/:id/preview', async (c) => {
       });
     });
 
+    console.log('Preview generated successfully:', { cellCount: cells.length, mergeCount: merges.length });
+
     return c.json({
       success: true,
       data: {
@@ -675,11 +703,27 @@ templates.get('/:id/preview', async (c) => {
       }
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Preview error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    
+    // より詳細なエラーメッセージを返す
+    let errorMessage = 'プレビューの取得に失敗しました';
+    if (error.message) {
+      errorMessage += `: ${error.message}`;
+    }
+    
     return c.json({
       success: false,
-      error: { code: 'SERVER_ERROR', message: 'プレビューの取得に失敗しました' }
+      error: { 
+        code: 'SERVER_ERROR', 
+        message: errorMessage,
+        details: error.message
+      }
     }, 500);
   }
 });
