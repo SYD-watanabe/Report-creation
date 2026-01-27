@@ -405,6 +405,9 @@ async function initTemplateDetail() {
     return
   }
   
+  // プロトタイプ用の状態を初期化
+  AppState.formFields = []
+  
   // テンプレート情報を読み込み
   await loadTemplateDetail(templateId)
   
@@ -413,6 +416,9 @@ async function initTemplateDetail() {
   
   // 項目一覧を読み込み
   await loadTemplateFields(templateId)
+  
+  // フォームプレビューを初期化
+  updateFormPreview()
   
   // URLパラメータをチェック（autoExtract=true）
   const urlParams = new URLSearchParams(window.location.search)
@@ -1239,9 +1245,16 @@ function colToNumber(col) {
   return num
 }
 
-// 【プロトタイプ】セルクリック処理（関数セルの警告付き）
+// 【プロトタイプ】セルクリック処理（項目追加機能付き）
 function handleCellClick(address, row, col, hasFormula) {
   console.log('セルクリック:', { address, row, col, hasFormula })
+  
+  // 既に選択済みのセルか確認
+  const existingField = AppState.formFields?.find(f => f.cell_position === address)
+  if (existingField) {
+    alert(`セル ${address} は既に項目として追加されています。\n\n項目名: ${existingField.field_name}`)
+    return
+  }
   
   if (hasFormula) {
     const confirmed = confirm(`⚠️ セル ${address} には数式が入っています。\n\nこのセルを項目として追加すると、数式が失われる可能性があります。\n\n続けますか？`)
@@ -1250,32 +1263,179 @@ function handleCellClick(address, row, col, hasFormula) {
     }
   }
   
-  // TODO: 項目追加機能を実装
-  alert(`セル ${address} (行:${row}, 列:${col}) をクリックしました\n\n次のステップで項目追加機能を実装します。`)
+  // 項目名を入力してもらう
+  const fieldName = prompt(`セル ${address} の項目名を入力してください:`, `項目_${address}`)
+  
+  if (!fieldName || fieldName.trim() === '') {
+    return
+  }
+  
+  // 項目をフォームプレビューに追加
+  addFieldToForm({
+    field_name: fieldName.trim(),
+    cell_position: address,
+    field_type: 'text',
+    row: row,
+    col: col,
+    hasFormula: hasFormula
+  })
+  
+  // セルの色を変更（赤色）
+  const cellElement = document.querySelector(`[data-address="${address}"]`)
+  if (cellElement) {
+    cellElement.classList.add('bg-red-100')
+    cellElement.classList.remove('hover:bg-blue-100')
+  }
+  
+  // フォームプレビューを更新
+  updateFormPreview()
+}
+
+// フォームに項目を追加
+function addFieldToForm(field) {
+  if (!AppState.formFields) {
+    AppState.formFields = []
+  }
+  
+  // 一意のIDを生成
+  field.temp_id = Date.now() + Math.random()
+  
+  AppState.formFields.push(field)
+  console.log('項目を追加:', field)
+}
+
+// フォームから項目を削除
+function removeFieldFromForm(tempId) {
+  const fieldIndex = AppState.formFields.findIndex(f => f.temp_id === tempId)
+  if (fieldIndex === -1) return
+  
+  const field = AppState.formFields[fieldIndex]
+  const address = field.cell_position
+  
+  // 配列から削除
+  AppState.formFields.splice(fieldIndex, 1)
+  
+  // セルの色を元に戻す
+  const cellElement = document.querySelector(`[data-address="${address}"]`)
+  if (cellElement) {
+    cellElement.classList.remove('bg-red-100')
+    cellElement.classList.add('hover:bg-blue-100')
+  }
+  
+  // フォームプレビューを更新
+  updateFormPreview()
 }
 
 // 【プロトタイプ】フォームプレビューを更新
 function updateFormPreview() {
-  const fields = AppState.fields || []
+  const fields = AppState.formFields || []
   
   if (fields.length === 0) {
-    document.getElementById('formPreview').innerHTML = '<p class="text-gray-500 text-center py-8">項目がありません</p>'
+    document.getElementById('formPreview').innerHTML = '<p class="text-gray-500 text-center py-8">項目がありません<br><br>Excelのセルをクリックして項目を追加してください</p>'
     return
   }
   
-  let html = '<div class="space-y-4">'
-  fields.forEach(field => {
-    if (field.include_in_form !== 0) {
-      html += `
-        <div class="border border-gray-200 rounded p-3">
-          <div class="font-semibold text-sm mb-1">${escapeHtml(field.field_name)}</div>
-          <div class="text-xs text-gray-500">セル: ${escapeHtml(field.cell_position || 'N/A')}</div>
-          <div class="text-xs text-gray-500">タイプ: ${escapeHtml(field.field_type)}</div>
+  let html = '<div class="space-y-3">'
+  fields.forEach((field, index) => {
+    html += `
+      <div class="border border-gray-300 rounded-lg p-3 bg-white hover:shadow-md transition">
+        <div class="flex justify-between items-start mb-2">
+          <div class="flex-1">
+            <div class="font-semibold text-sm text-gray-800 mb-1">
+              <i class="fas fa-edit mr-1 text-blue-500"></i>
+              <span contenteditable="true" 
+                    id="field-name-${field.temp_id}"
+                    class="hover:bg-yellow-50 px-1 rounded"
+                    onblur="updateFieldName(${field.temp_id}, this.textContent)">${escapeHtml(field.field_name)}</span>
+            </div>
+            <div class="text-xs text-gray-500">
+              <i class="fas fa-table mr-1"></i>セル: <span class="font-mono font-semibold">${escapeHtml(field.cell_position)}</span>
+            </div>
+            ${field.hasFormula ? '<div class="text-xs text-orange-600 mt-1"><i class="fas fa-exclamation-triangle mr-1"></i>数式セル</div>' : ''}
+          </div>
+          <button 
+            onclick="removeFieldFromForm(${field.temp_id})"
+            class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded transition"
+            title="削除">
+            <i class="fas fa-trash"></i>
+          </button>
         </div>
-      `
-    }
+        <div class="text-xs text-gray-400 italic">
+          項目名をクリックして編集できます
+        </div>
+      </div>
+    `
   })
+  
+  // 手動で項目追加ボタン
+  html += `
+    <button 
+      onclick="showAddFieldManuallyDialog()"
+      class="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-gray-500 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition">
+      <i class="fas fa-plus-circle mr-2"></i>
+      手動で項目を追加
+    </button>
+  `
+  
   html += '</div>'
+  
+  document.getElementById('formPreview').innerHTML = html
+}
+
+// 項目名を更新
+function updateFieldName(tempId, newName) {
+  const field = AppState.formFields.find(f => f.temp_id === tempId)
+  if (field && newName.trim()) {
+    field.field_name = newName.trim()
+    console.log('項目名を更新:', field)
+  }
+}
+
+// 手動で項目追加ダイアログ
+function showAddFieldManuallyDialog() {
+  const fieldName = prompt('項目名を入力してください:')
+  if (!fieldName || fieldName.trim() === '') {
+    return
+  }
+  
+  const address = prompt('セル位置を入力してください（例: A1, B5）:', 'A1')
+  if (!address || address.trim() === '') {
+    return
+  }
+  
+  // セルアドレスのバリデーション
+  const addressPattern = /^[A-Z]+\d+$/
+  if (!addressPattern.test(address.toUpperCase())) {
+    alert('セル位置が不正です。例: A1, B5, AA10')
+    return
+  }
+  
+  // 既に追加済みかチェック
+  const existingField = AppState.formFields?.find(f => f.cell_position === address.toUpperCase())
+  if (existingField) {
+    alert(`セル ${address} は既に項目として追加されています。`)
+    return
+  }
+  
+  // 項目を追加
+  addFieldToForm({
+    field_name: fieldName.trim(),
+    cell_position: address.toUpperCase(),
+    field_type: 'text',
+    row: null,
+    col: null,
+    hasFormula: false
+  })
+  
+  // セルの色を変更
+  const cellElement = document.querySelector(`[data-address="${address.toUpperCase()}"]`)
+  if (cellElement) {
+    cellElement.classList.add('bg-red-100')
+    cellElement.classList.remove('hover:bg-blue-100')
+  }
+  
+  updateFormPreview()
+}
   
   document.getElementById('formPreview').innerHTML = html
 }
