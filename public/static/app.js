@@ -190,8 +190,48 @@ function initCommon() {
   // フォーム管理ボタン
   const formsMenuBtn = document.getElementById('formsMenuBtn')
   if (formsMenuBtn) {
-    formsMenuBtn.addEventListener('click', () => {
-      alert('フォーム管理機能は開発中です。\n各テンプレートの詳細ページからフォームを作成・管理できます。')
+    formsMenuBtn.addEventListener('click', async () => {
+      try {
+        // テンプレート一覧を取得
+        const { data } = await apiCall('/api/templates')
+        
+        if (data.success && data.data.templates.length > 0) {
+          const templates = data.data.templates
+          
+          // テンプレート選択用のHTML生成
+          const templateOptions = templates.map(t => 
+            `<div class="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition" onclick="window.location.href='/templates/${t.template_id}/forms'">
+              <h4 class="font-semibold text-gray-800">${escapeHtml(t.template_name)}</h4>
+              <p class="text-sm text-gray-600 mt-1">作成日: ${formatDate(t.created_at)}</p>
+            </div>`
+          ).join('')
+          
+          // モーダルを作成して表示
+          const modalHtml = `
+            <div id="templateSelectModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-6">
+                  <h3 class="text-2xl font-bold">テンプレートを選択</h3>
+                  <button onclick="document.getElementById('templateSelectModal').remove()" class="text-gray-600 hover:text-gray-800 text-2xl">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+                <p class="text-gray-600 mb-4">フォーム管理するテンプレートを選択してください</p>
+                <div class="space-y-3">
+                  ${templateOptions}
+                </div>
+              </div>
+            </div>
+          `
+          
+          document.body.insertAdjacentHTML('beforeend', modalHtml)
+        } else {
+          alert('テンプレートがありません。\nまずテンプレートをアップロードしてください。')
+        }
+      } catch (error) {
+        console.error('Failed to load templates:', error)
+        alert('テンプレート一覧の取得に失敗しました')
+      }
     })
   }
   
