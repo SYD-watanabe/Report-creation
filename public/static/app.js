@@ -1522,7 +1522,7 @@ function handleCellClick(address, row, col, hasFormula) {
   }
   
   // 項目名を入力してもらう
-  const fieldName = prompt(`セル ${address} の項目名を入力してください:`, `項目_${address}`)
+  const fieldName = prompt(`セル ${address} の項目名を入力してください:\n\n担当者が分かるような項目名にしてください。\n例：〇〇の数量`, `項目_${address}`)
   
   if (!fieldName || fieldName.trim() === '') {
     return
