@@ -445,9 +445,11 @@ async function initTemplateDetail() {
       createFormFromPreviewBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>作成中...'
       
       try {
+        console.log('保存する項目:', AppState.formFields)
+        
         // まず選択した項目をtemplate_fieldsテーブルに保存
         const savePromises = AppState.formFields.map(async (field, index) => {
-          return apiCall(`/api/templates/${templateId}/fields`, {
+          const response = await apiCall(`/api/templates/${templateId}/fields`, {
             method: 'POST',
             body: JSON.stringify({
               field_name: field.field_name,
@@ -457,11 +459,30 @@ async function initTemplateDetail() {
               display_order: index + 1
             })
           })
+          console.log(`項目 ${index + 1} 保存結果:`, response.data)
+          return response
         })
         
-        await Promise.all(savePromises)
+        const results = await Promise.all(savePromises)
+        
+        // すべての保存が成功したか確認
+        const allSuccess = results.every(r => r.data.success)
+        if (!allSuccess) {
+          const failedResults = results.filter(r => !r.data.success)
+          console.error('保存失敗:', failedResults)
+          alert('項目の保存に失敗しました')
+          createFormFromPreviewBtn.disabled = false
+          createFormFromPreviewBtn.innerHTML = '<i class="fas fa-plus-circle mr-2"></i>フォーム作成'
+          return
+        }
+        
+        console.log('全項目の保存が完了しました')
+        
+        // 少し待機（データベースの書き込みを確実にするため）
+        await new Promise(resolve => setTimeout(resolve, 500))
         
         // フォームを作成
+        console.log('フォームを作成します...')
         const { data } = await apiCall(`/api/forms`, {
           method: 'POST',
           body: JSON.stringify({
@@ -470,6 +491,8 @@ async function initTemplateDetail() {
             form_description: '自動生成されたフォーム'
           })
         })
+        
+        console.log('フォーム作成結果:', data)
         
         if (data.success) {
           // 成功したらフォーム管理ページに遷移
