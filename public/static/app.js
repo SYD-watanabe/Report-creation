@@ -373,16 +373,16 @@ async function handleTemplateUpload(event) {
     
     if (data.success) {
       // アップロード成功メッセージ
-      alert('テンプレートをアップロードしました。AI項目抽出を自動で開始します。')
+      alert('テンプレートをアップロードしました。')
       
       // ユーザー情報を更新
       const user = JSON.parse(localStorage.getItem('user'))
       user.templates_created = (user.templates_created || 0) + 1
       localStorage.setItem('user', JSON.stringify(user))
       
-      // テンプレート詳細ページへ遷移（AI抽出を自動実行）
+      // テンプレート詳細ページへ遷移
       const templateId = data.data.template_id
-      window.location.href = `/templates/${templateId}?autoExtract=true`
+      window.location.href = `/templates/${templateId}`
     } else {
       alert(data.error.message || 'アップロードに失敗しました')
     }
@@ -507,13 +507,7 @@ async function initTemplateDetail() {
   
   // URLパラメータをチェック（autoExtract=true）
   const urlParams = new URLSearchParams(window.location.search)
-  const autoExtract = urlParams.get('autoExtract')
-  
-  // AI抽出ボタン
-  const extractBtn = document.getElementById('extractBtn')
-  if (extractBtn) {
-    extractBtn.addEventListener('click', () => handleExtractFields(templateId))
-  }
+  // AI抽出機能は削除されました
   
   // フォーム作成ボタン
   const createFormFromPreviewBtn = document.getElementById('createFormFromPreviewBtn')
@@ -599,16 +593,7 @@ async function initTemplateDetail() {
     })
   }
   
-  // autoExtract=trueの場合、自動でAI抽出を実行
-  if (autoExtract === 'true' && extractBtn) {
-    // URLパラメータをクリア
-    window.history.replaceState({}, '', `/templates/${templateId}`)
-    
-    // 少し待ってからAI抽出を自動実行
-    setTimeout(() => {
-      handleExtractFields(templateId, true) // 自動実行フラグを追加
-    }, 500)
-  }
+  // AI抽出機能は削除されました
 }
 
 // テンプレート詳細を読み込み
@@ -804,44 +789,7 @@ function renderFields(fields) {
   window.currentFields = fields
 }
 
-// AI項目抽出を実行
-async function handleExtractFields(templateId, autoRun = false) {
-  const extractBtn = document.getElementById('extractBtn')
-  const extractionStatus = document.getElementById('extractionStatus')
-  
-  // 手動実行の場合は確認ダイアログを表示
-  if (!autoRun && !confirm('AI項目抽出を実行しますか？\n既存の項目情報は上書きされます。')) {
-    return
-  }
-  
-  try {
-    extractBtn.disabled = true
-    extractBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>抽出中...'
-    extractionStatus.classList.remove('hidden')
-    
-    const { data } = await apiCall(`/api/templates/${templateId}/extract`, {
-      method: 'POST'
-    })
-    
-    extractionStatus.classList.add('hidden')
-    
-    if (data.success) {
-      alert(`AI項目抽出が完了しました！\n\n抽出された項目数: ${data.data.total_fields}件\n信頼度: ${(data.data.confidence * 100).toFixed(0)}%`)
-      
-      // 項目一覧を再読み込み
-      await loadTemplateFields(templateId)
-    } else {
-      alert(data.error.message || 'AI項目抽出に失敗しました')
-    }
-  } catch (error) {
-    console.error('Extract fields error:', error)
-    alert('AI項目抽出に失敗しました')
-    extractionStatus.classList.add('hidden')
-  } finally {
-    extractBtn.disabled = false
-    extractBtn.innerHTML = '<i class="fas fa-magic mr-2"></i>AI項目抽出を実行'
-  }
-}
+// AI項目抽出機能は削除されました
 
 // フォームに含む/除外をトグル
 function toggleFieldInForm(fieldId, include) {

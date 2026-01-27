@@ -613,31 +613,6 @@ app.get('/templates/:id', (c) => {
             </div>
           </div>
         </div>
-        
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <div class="flex justify-between items-center mb-6">
-            <h3 class="text-lg font-bold">抽出された項目</h3>
-            <div class="flex gap-2">
-              <button 
-                id="extractBtn" 
-                class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition"
-              >
-                <i class="fas fa-magic mr-2"></i>AI項目抽出を実行
-              </button>
-            </div>
-          </div>
-          <div id="extractionStatus" class="hidden mb-4">
-            <div class="bg-blue-50 border-l-4 border-blue-500 p-4">
-              <p class="text-blue-700">
-                <i class="fas fa-spinner fa-spin mr-2"></i>
-                AI項目抽出中... しばらくお待ちください
-              </p>
-            </div>
-          </div>
-          <div id="fieldsList">
-            <p class="text-gray-500 text-center py-8">まだ項目が抽出されていません</p>
-          </div>
-        </div>
       </div>
       
       <script src="/static/app.js"></script>
