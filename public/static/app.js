@@ -1207,22 +1207,6 @@ function colToNumber(col) {
   }
   return num
 }
-      }
-      html += '</tbody></table>'
-      
-      document.getElementById('excelPreview').innerHTML = html
-      
-      // フォームプレビューも更新
-      updateFormPreview()
-      
-    } else {
-      document.getElementById('excelPreview').innerHTML = '<p class="text-red-600 text-center py-4">プレビューの読み込みに失敗しました</p>'
-    }
-  } catch (error) {
-    console.error('Load Excel preview error:', error)
-    document.getElementById('excelPreview').innerHTML = '<p class="text-red-600 text-center py-4">プレビューの読み込みに失敗しました</p>'
-  }
-}
 
 // 【プロトタイプ】セルクリック処理（関数セルの警告付き）
 function handleCellClick(address, row, col, hasFormula) {
