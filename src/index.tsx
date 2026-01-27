@@ -102,6 +102,98 @@ const Header = () => (
   </nav>
 )
 
+// 共通モーダルコンポーネント
+const CommonModals = () => (
+  <>
+    {/* アカウント情報モーダル */}
+    <div id="accountModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
+        <h3 class="text-2xl font-bold mb-6">アカウント情報</h3>
+        <form id="accountForm">
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-2">メールアドレス</label>
+            <input 
+              type="email" 
+              id="accountEmail"
+              disabled
+              class="w-full px-4 py-3 border rounded-lg bg-gray-100 text-gray-600"
+            />
+          </div>
+          <div class="mb-6">
+            <label class="block text-gray-700 mb-2">ユーザー名</label>
+            <input 
+              type="text" 
+              id="accountName"
+              name="name"
+              required
+              class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              placeholder="ユーザー名を入力"
+            />
+          </div>
+          <div class="flex gap-4">
+            <button 
+              type="submit"
+              class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+            >
+              変更を保存
+            </button>
+            <button 
+              type="button"
+              id="cancelAccountBtn"
+              class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-400 transition"
+            >
+              キャンセル
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    {/* お問い合わせモーダル */}
+    <div id="contactModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
+        <h3 class="text-2xl font-bold mb-6">お問い合わせ</h3>
+        
+        <div class="mb-6">
+          <h4 class="text-lg font-semibold mb-3 text-gray-800">会社概要</h4>
+          <div class="bg-gray-50 p-4 rounded-lg text-sm text-gray-700 space-y-2">
+            <p class="font-semibold">株式会社SYD　ネットPR事業部</p>
+            <p>東京都中央区日本橋小舟町9-4</p>
+            <p>日本橋小舟町ビル7F</p>
+            <p class="mt-3">
+              <i class="fas fa-phone mr-2"></i>
+              TEL：<a href="tel:03-6264-8977" class="text-blue-600 hover:underline">03-6264-8977</a> / 
+              <a href="tel:050-3160-7004" class="text-blue-600 hover:underline">050-3160-7004</a>
+            </p>
+            <p class="text-gray-600">（平日10:00～17:50）</p>
+          </div>
+        </div>
+
+        <div class="mb-6">
+          <h4 class="text-lg font-semibold mb-3 text-gray-800">フォームからお問い合わせ</h4>
+          <a 
+            href="https://www.netpr.biz/report-creation-form" 
+            target="_blank"
+            rel="noopener noreferrer"
+            class="block w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition text-center"
+          >
+            <i class="fas fa-external-link-alt mr-2"></i>
+            お問い合わせフォームを開く
+          </a>
+        </div>
+
+        <button 
+          type="button"
+          id="closeContactBtn"
+          class="w-full bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-400 transition"
+        >
+          閉じる
+        </button>
+      </div>
+    </div>
+  </>
+)
+
 // ホームページ（ログイン画面）
 app.get('/', (c) => {
   return c.render(
@@ -598,6 +690,8 @@ app.get('/templates/:id', (c) => {
         </div>
       </div>
       
+      <CommonModals />
+      
       <script src="/static/app.js"></script>
       <script dangerouslySetInnerHTML={{
         __html: `window.TEMPLATE_ID = '${templateId}'`
@@ -725,6 +819,8 @@ app.get('/templates/:id/forms', (c) => {
         </div>
       </div>
       
+      <CommonModals />
+      
       <script src="/static/app.js"></script>
       <script dangerouslySetInnerHTML={{
         __html: `window.TEMPLATE_ID = '${templateId}'`
@@ -775,6 +871,8 @@ app.get('/quotes', (c) => {
           </div>
         </div>
       </div>
+      
+      <CommonModals />
       
       <script src="/static/app.js"></script>
       <script src="/static/quotes.js"></script>
