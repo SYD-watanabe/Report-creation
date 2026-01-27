@@ -693,6 +693,8 @@ templates.post('/:id/fields', async (c) => {
     const body = await c.req.json();
     const { field_name, cell_position, field_type, include_in_form, display_order } = body;
 
+    console.log('Add field request:', { templateId, user: user.user_id, body });
+
     if (!field_name || !cell_position) {
       return c.json({
         success: false,
@@ -705,6 +707,8 @@ templates.post('/:id/fields', async (c) => {
       'SELECT * FROM templates WHERE template_id = ? AND user_id = ?'
     ).bind(templateId, user.user_id).first();
 
+    console.log('Template found:', template);
+
     if (!template) {
       return c.json({
         success: false,
@@ -713,9 +717,11 @@ templates.post('/:id/fields', async (c) => {
     }
 
     // 既存の同じセル位置のフィールドを削除
-    await env.DB.prepare(
+    const deleteResult = await env.DB.prepare(
       'DELETE FROM template_fields WHERE template_id = ? AND cell_position = ?'
     ).bind(templateId, cell_position).run();
+    
+    console.log('Delete result:', deleteResult);
 
     // 新しいフィールドを追加
     const result = await env.DB.prepare(`
@@ -731,6 +737,8 @@ templates.post('/:id/fields', async (c) => {
       display_order || 1
     ).run();
 
+    console.log('Insert result:', result);
+
     return c.json({
       success: true,
       message: 'フィールドを追加しました',
@@ -740,9 +748,10 @@ templates.post('/:id/fields', async (c) => {
     });
   } catch (error: any) {
     console.error('Add field error:', error);
+    console.error('Error stack:', error.stack);
     return c.json({
       success: false,
-      error: { code: 'SERVER_ERROR', message: 'フィールドの追加に失敗しました' }
+      error: { code: 'SERVER_ERROR', message: `フィールドの追加に失敗しました: ${error.message}` }
     }, 500);
   }
 });
