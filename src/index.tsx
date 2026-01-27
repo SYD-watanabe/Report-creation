@@ -228,14 +228,15 @@ app.get('/dashboard', (c) => {
         </div>
         
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <div class="flex justify-between items-center mb-6">
-            <h3 class="text-lg font-bold">マイテンプレート</h3>
-            <button id="uploadBtn" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
-              <i class="fas fa-upload mr-2"></i>新しいテンプレートを作成
-            </button>
-          </div>
           <div id="templatesList">
             <p class="text-gray-500 text-center py-8">テンプレートがまだありません</p>
+          </div>
+          
+          {/* 新しいテンプレートを作成ボタン（中央配置、拡大） */}
+          <div class="flex justify-center mt-6">
+            <button id="uploadBtn" class="bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-700 transition shadow-md hover:shadow-lg">
+              <i class="fas fa-upload mr-2"></i>新しいテンプレートを作成
+            </button>
           </div>
         </div>
       </div>
