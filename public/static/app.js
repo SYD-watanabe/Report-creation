@@ -433,9 +433,60 @@ async function initTemplateDetail() {
   // フォーム作成ボタン
   const createFormFromPreviewBtn = document.getElementById('createFormFromPreviewBtn')
   if (createFormFromPreviewBtn) {
-    createFormFromPreviewBtn.addEventListener('click', () => {
-      // フォーム管理ページに遷移
-      window.location.href = `/templates/${templateId}/forms`
+    createFormFromPreviewBtn.addEventListener('click', async () => {
+      // 選択された項目があるかチェック
+      if (!AppState.formFields || AppState.formFields.length === 0) {
+        alert('項目を追加してからフォームを作成してください')
+        return
+      }
+      
+      // ローディング表示
+      createFormFromPreviewBtn.disabled = true
+      createFormFromPreviewBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>作成中...'
+      
+      try {
+        // まず選択した項目をtemplate_fieldsテーブルに保存
+        const savePromises = AppState.formFields.map(async (field, index) => {
+          return apiCall(`/api/templates/${templateId}/fields`, {
+            method: 'POST',
+            body: JSON.stringify({
+              field_name: field.field_name,
+              cell_position: field.cell_position,
+              field_type: field.field_type || 'text',
+              include_in_form: 1,
+              display_order: index + 1
+            })
+          })
+        })
+        
+        await Promise.all(savePromises)
+        
+        // フォームを作成
+        const { data } = await apiCall(`/api/forms`, {
+          method: 'POST',
+          body: JSON.stringify({
+            template_id: templateId,
+            form_title: `フォーム - ${new Date().toLocaleDateString('ja-JP')}`,
+            form_description: '自動生成されたフォーム'
+          })
+        })
+        
+        if (data.success) {
+          // 成功したらフォーム管理ページに遷移
+          window.location.href = `/templates/${templateId}/forms`
+        } else {
+          alert(`エラー: ${data.error?.message || 'フォームの作成に失敗しました'}`)
+          // ボタンを元に戻す
+          createFormFromPreviewBtn.disabled = false
+          createFormFromPreviewBtn.innerHTML = '<i class="fas fa-plus-circle mr-2"></i>フォーム作成'
+        }
+      } catch (error) {
+        console.error('Create form error:', error)
+        alert('フォームの作成に失敗しました')
+        // ボタンを元に戻す
+        createFormFromPreviewBtn.disabled = false
+        createFormFromPreviewBtn.innerHTML = '<i class="fas fa-plus-circle mr-2"></i>フォーム作成'
+      }
     })
   }
   

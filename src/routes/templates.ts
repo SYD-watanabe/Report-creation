@@ -684,4 +684,67 @@ templates.get('/:id/preview', async (c) => {
   }
 });
 
+// テンプレートフィールドを追加（認証必要）
+templates.post('/:id/fields', async (c) => {
+  try {
+    const user = c.get('user');
+    const { env } = c;
+    const templateId = c.req.param('id');
+    const body = await c.req.json();
+    const { field_name, cell_position, field_type, include_in_form, display_order } = body;
+
+    if (!field_name || !cell_position) {
+      return c.json({
+        success: false,
+        error: { code: 'MISSING_FIELDS', message: '項目名とセル位置は必須です' }
+      }, 400);
+    }
+
+    // テンプレートの所有者確認
+    const template = await env.DB.prepare(
+      'SELECT * FROM templates WHERE template_id = ? AND user_id = ?'
+    ).bind(templateId, user.user_id).first();
+
+    if (!template) {
+      return c.json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'テンプレートが見つかりません' }
+      }, 404);
+    }
+
+    // 既存の同じセル位置のフィールドを削除
+    await env.DB.prepare(
+      'DELETE FROM template_fields WHERE template_id = ? AND cell_position = ?'
+    ).bind(templateId, cell_position).run();
+
+    // 新しいフィールドを追加
+    const result = await env.DB.prepare(`
+      INSERT INTO template_fields (
+        template_id, field_name, cell_position, field_type, include_in_form, display_order
+      ) VALUES (?, ?, ?, ?, ?, ?)
+    `).bind(
+      templateId,
+      field_name,
+      cell_position,
+      field_type || 'text',
+      include_in_form !== undefined ? include_in_form : 1,
+      display_order || 1
+    ).run();
+
+    return c.json({
+      success: true,
+      message: 'フィールドを追加しました',
+      data: {
+        field_id: result.meta.last_row_id
+      }
+    });
+  } catch (error: any) {
+    console.error('Add field error:', error);
+    return c.json({
+      success: false,
+      error: { code: 'SERVER_ERROR', message: 'フィールドの追加に失敗しました' }
+    }, 500);
+  }
+});
+
 export default templates;
