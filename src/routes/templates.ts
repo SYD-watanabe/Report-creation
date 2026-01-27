@@ -674,9 +674,6 @@ templates.get('/:id/preview', async (c) => {
         colWidths: colWidths
       }
     });
-        merges: merges
-      }
-    });
 
   } catch (error) {
     console.error('Preview error:', error);
