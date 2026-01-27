@@ -1459,7 +1459,7 @@ async function loadExcelPreview(templateId) {
           
           // 値を表示（関数セルには警告アイコン）
           if (formula) {
-            html += `<span title="数式: ${formula}">⚠️ ${value}</span>`
+            html += `<span title="数式: ${formula}">！関数が入っています</span>`
           } else {
             html += value
           }
