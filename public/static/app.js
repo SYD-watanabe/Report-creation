@@ -1027,13 +1027,13 @@ async function handleSaveAccount(e) {
   }
 }
 
-// 【プロトタイプ】Excelプレビューを読み込み（改善版：セル結合、スタイル対応）
+// 【プロトタイプ】Excelプレビューを読み込み（改善版：セル結合、スタイル、サイズ対応）
 async function loadExcelPreview(templateId) {
   try {
     const { data } = await apiCall(`/api/templates/${templateId}/preview`)
     
     if (data.success) {
-      const { cells, rowCount, colCount, merges } = data.data
+      const { cells, rowCount, colCount, merges, rowHeights, colWidths } = data.data
       
       // セルデータをグリッド形式に変換
       const grid = []
@@ -1082,19 +1082,31 @@ async function loadExcelPreview(templateId) {
       }
       
       // HTMLテーブルを生成
-      let html = '<table class="w-full border-collapse text-xs" style="table-layout: fixed;">'
+      let html = '<table class="border-collapse text-xs" style="table-layout: fixed;">'
+      
+      // colgroup で列幅を設定
+      html += '<colgroup>'
+      html += '<col style="width: 40px;">' // 行番号列
+      for (let c = 1; c <= colCount; c++) {
+        const width = colWidths[c] || 80
+        html += `<col style="width: ${width}px;">`
+      }
+      html += '</colgroup>'
       
       // ヘッダー行（列番号 A, B, C...）
-      html += '<thead><tr><th class="border border-gray-300 bg-gray-100 px-2 py-1" style="width: 40px;"></th>'
+      html += '<thead><tr><th class="border border-gray-300 bg-gray-100 px-2 py-1"></th>'
       for (let c = 1; c <= colCount; c++) {
         const colName = numberToCol(c)
-        html += `<th class="border border-gray-300 bg-gray-100 px-2 py-1" style="width: 80px;">${colName}</th>`
+        html += `<th class="border border-gray-300 bg-gray-100 px-2 py-1">${colName}</th>`
       }
       html += '</tr></thead><tbody>'
       
       // データ行
       for (let r = 1; r <= rowCount; r++) {
-        html += `<tr><td class="border border-gray-300 bg-gray-100 px-2 py-1 text-center font-semibold">${r}</td>`
+        const rowHeight = rowHeights[r] || 20
+        html += `<tr style="height: ${rowHeight}px;">`
+        html += `<td class="border border-gray-300 bg-gray-100 px-2 py-1 text-center font-semibold">${r}</td>`
+        
         for (let c = 1; c <= colCount; c++) {
           const mergeInfo = mergedCells.get(`${r}-${c}`)
           
@@ -1143,6 +1155,15 @@ async function loadExcelPreview(templateId) {
             cellStyle += ' text-right'
           }
           
+          // 縦方向の配置
+          if (style.verticalAlignment === 'top') {
+            cellStyle += ' align-top'
+          } else if (style.verticalAlignment === 'bottom') {
+            cellStyle += ' align-bottom'
+          } else {
+            cellStyle += ' align-middle'
+          }
+          
           // 関数セルは薄いオレンジ色で表示
           if (formula) {
             cellStyle += ' bg-orange-100'
@@ -1177,6 +1198,16 @@ async function loadExcelPreview(templateId) {
       html += '</tbody></table>'
       
       document.getElementById('excelPreview').innerHTML = html
+    } else {
+      document.getElementById('excelPreview').innerHTML = 
+        `<p class="text-red-500 text-center py-4">${data.error?.message || 'プレビューの読み込みに失敗しました'}</p>`
+    }
+  } catch (error) {
+    console.error('Load Excel preview error:', error)
+    document.getElementById('excelPreview').innerHTML = 
+      '<p class="text-red-500 text-center py-4">プレビューの読み込みに失敗しました</p>'
+  }
+}
     } else {
       document.getElementById('excelPreview').innerHTML = 
         `<p class="text-red-500 text-center py-4">${data.error?.message || 'プレビューの読み込みに失敗しました'}</p>`

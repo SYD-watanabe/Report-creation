@@ -583,6 +583,8 @@ templates.get('/:id/preview', async (c) => {
     const worksheet = workbook.worksheets[0];
     const cells: any[] = [];
     const merges: any[] = [];
+    const rowHeights: any = {};
+    const colWidths: any = {};
 
     // セル結合情報を取得
     if (worksheet.model && worksheet.model.merges) {
@@ -591,15 +593,29 @@ templates.get('/:id/preview', async (c) => {
       });
     }
 
-    // 実際に使用されている範囲を取得（最大100行×50列まで）
+    // 実際に使用されている範囲を取得（制限を緩和: 200行×100列まで）
     const actualRows = worksheet.actualRowCount || worksheet.rowCount;
     const actualCols = worksheet.actualColumnCount || worksheet.columnCount;
-    const maxRows = Math.min(actualRows, 100);
-    const maxCols = Math.min(actualCols, 50);
+    const maxRows = Math.min(actualRows, 200);
+    const maxCols = Math.min(actualCols, 100);
 
-    // セルデータを取得
+    // 列の幅を取得
+    worksheet.columns.forEach((col: any, index: number) => {
+      const colNumber = index + 1;
+      if (colNumber <= maxCols) {
+        // ExcelJSの幅は文字数単位、ピクセルに変換（約7ピクセル/文字）
+        const width = col.width ? Math.round(col.width * 7) : 80;
+        colWidths[colNumber] = width;
+      }
+    });
+
+    // セルデータと行の高さを取得
     worksheet.eachRow({ includeEmpty: true }, (row, rowNumber) => {
       if (rowNumber > maxRows) return;
+      
+      // 行の高さを取得（ポイント単位→ピクセル変換: 約1.33倍）
+      const height = row.height ? Math.round(row.height * 1.33) : 20;
+      rowHeights[rowNumber] = height;
       
       row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
         if (colNumber > maxCols) return;
@@ -653,6 +669,11 @@ templates.get('/:id/preview', async (c) => {
         rowCount: maxRows,
         colCount: maxCols,
         cells: cells,
+        merges: merges,
+        rowHeights: rowHeights,
+        colWidths: colWidths
+      }
+    });
         merges: merges
       }
     });
