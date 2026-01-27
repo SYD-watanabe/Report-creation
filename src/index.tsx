@@ -695,6 +695,47 @@ app.get('/templates/:id', (c) => {
         </div>
       </div>
       
+      {/* フォーム名入力モーダル */}
+      <div id="formNameModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
+          <h3 class="text-2xl font-bold mb-6">フォーム名を入力</h3>
+          <form id="formNameForm">
+            <div class="mb-6">
+              <label class="block text-gray-700 mb-2">フォーム名</label>
+              <div class="flex items-center gap-2">
+                <span class="text-gray-600" id="templateNamePrefix">テンプレート名: </span>
+                <input 
+                  type="text" 
+                  id="formNameSuffix"
+                  name="form_name_suffix"
+                  required
+                  class="flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="例: 営業用"
+                />
+              </div>
+              <p class="text-sm text-gray-500 mt-2">
+                完成例: 「テンプレート名: 営業用」
+              </p>
+            </div>
+            <div class="flex gap-4">
+              <button 
+                type="submit"
+                class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+              >
+                作成
+              </button>
+              <button 
+                type="button"
+                id="cancelFormNameBtn"
+                class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-400 transition"
+              >
+                キャンセル
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
       <CommonModals />
       
       <script src="/static/app.js"></script>

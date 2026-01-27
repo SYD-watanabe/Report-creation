@@ -598,12 +598,52 @@ async function initTemplateDetail() {
   // フォーム作成ボタン
   const createFormFromPreviewBtn = document.getElementById('createFormFromPreviewBtn')
   if (createFormFromPreviewBtn) {
-    createFormFromPreviewBtn.addEventListener('click', async () => {
+    createFormFromPreviewBtn.addEventListener('click', () => {
       // 選択された項目があるかチェック
       if (!AppState.formFields || AppState.formFields.length === 0) {
         alert('項目を追加してからフォームを作成してください')
         return
       }
+      
+      // フォーム名入力モーダルを表示
+      const formNameModal = document.getElementById('formNameModal')
+      const formNameSuffix = document.getElementById('formNameSuffix')
+      
+      if (formNameModal && formNameSuffix) {
+        formNameSuffix.value = '' // 入力欄をクリア
+        formNameModal.classList.remove('hidden')
+        formNameSuffix.focus()
+      }
+    })
+  }
+  
+  // フォーム名入力モーダルのキャンセルボタン
+  const cancelFormNameBtn = document.getElementById('cancelFormNameBtn')
+  const formNameModal = document.getElementById('formNameModal')
+  if (cancelFormNameBtn && formNameModal) {
+    cancelFormNameBtn.addEventListener('click', () => {
+      formNameModal.classList.add('hidden')
+    })
+  }
+  
+  // フォーム名入力フォームの送信
+  const formNameForm = document.getElementById('formNameForm')
+  if (formNameForm) {
+    formNameForm.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      
+      const formNameSuffix = document.getElementById('formNameSuffix').value.trim()
+      if (!formNameSuffix) {
+        alert('フォーム名を入力してください')
+        return
+      }
+      
+      // テンプレート情報を取得
+      const templateTitle = document.getElementById('templateTitle')?.textContent || 'テンプレート'
+      const formTitle = `${templateTitle}: ${formNameSuffix}`
+      
+      // モーダルを閉じる
+      formNameModal.classList.add('hidden')
       
       // ローディング表示
       createFormFromPreviewBtn.disabled = true
@@ -648,13 +688,13 @@ async function initTemplateDetail() {
         await new Promise(resolve => setTimeout(resolve, 500))
         
         // フォームを作成
-        console.log('フォームを作成します...')
+        console.log('フォームを作成します...', formTitle)
         const { data } = await apiCall(`/api/forms`, {
           method: 'POST',
           body: JSON.stringify({
             template_id: templateId,
-            form_title: `フォーム - ${new Date().toLocaleDateString('ja-JP')}`,
-            form_description: '自動生成されたフォーム'
+            form_title: formTitle,
+            form_description: `${formNameSuffix}用のフォーム`
           })
         })
         
