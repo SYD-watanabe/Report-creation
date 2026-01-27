@@ -558,12 +558,7 @@ app.get('/templates/:id', (c) => {
           <h2 class="text-2xl font-bold mb-4" id="templateTitle">テンプレート詳細</h2>
         </div>
         
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <h3 class="text-lg font-bold mb-4">テンプレート情報</h3>
-          <div id="templateInfo" class="text-gray-600">
-            読み込み中...
-          </div>
-        </div>
+        {/* テンプレート情報は非表示 */}
         
         {/* プロトタイプ: 2カラムレイアウト（7:3比率） */}
         <div class="grid grid-cols-10 gap-6 mb-8">

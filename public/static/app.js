@@ -557,22 +557,37 @@ async function loadTemplateDetail(templateId) {
     if (data.success) {
       const template = data.data.template
       
-      document.getElementById('templateTitle').textContent = template.template_name
-      document.getElementById('templateInfo').innerHTML = `
-        <div class="space-y-2">
-          <p><strong>ファイル形式:</strong> ${template.file_type.toUpperCase()}</p>
-          <p><strong>ファイルサイズ:</strong> ${formatFileSize(template.file_size)}</p>
-          <p><strong>作成した見積書:</strong> ${template.quotes_created}件</p>
-          <p><strong>作成日:</strong> ${formatDate(template.created_at)}</p>
-          <p><strong>更新日:</strong> ${formatDate(template.updated_at)}</p>
-        </div>
-      `
+      // テンプレートタイトルを更新
+      const titleElement = document.getElementById('templateTitle')
+      if (titleElement) {
+        titleElement.textContent = template.template_name
+      }
+      
+      // テンプレート情報を更新（要素が存在する場合のみ）
+      const infoElement = document.getElementById('templateInfo')
+      if (infoElement) {
+        infoElement.innerHTML = `
+          <div class="space-y-2">
+            <p><strong>ファイル形式:</strong> ${template.file_type.toUpperCase()}</p>
+            <p><strong>ファイルサイズ:</strong> ${formatFileSize(template.file_size)}</p>
+            <p><strong>作成した見積書:</strong> ${template.quotes_created}件</p>
+            <p><strong>作成日:</strong> ${formatDate(template.created_at)}</p>
+            <p><strong>更新日:</strong> ${formatDate(template.updated_at)}</p>
+          </div>
+        `
+      }
     } else {
-      document.getElementById('templateInfo').innerHTML = '<p class="text-red-600">テンプレート情報の読み込みに失敗しました</p>'
+      const infoElement = document.getElementById('templateInfo')
+      if (infoElement) {
+        infoElement.innerHTML = '<p class="text-red-600">テンプレート情報の読み込みに失敗しました</p>'
+      }
     }
   } catch (error) {
     console.error('Load template detail error:', error)
-    document.getElementById('templateInfo').innerHTML = '<p class="text-red-600">テンプレート情報の読み込みに失敗しました</p>'
+    const infoElement = document.getElementById('templateInfo')
+    if (infoElement) {
+      infoElement.innerHTML = '<p class="text-red-600">テンプレート情報の読み込みに失敗しました</p>'
+    }
   }
 }
 
