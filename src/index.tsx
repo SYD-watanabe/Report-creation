@@ -163,57 +163,76 @@ app.get('/register', (c) => {
 // ダッシュボード
 app.get('/dashboard', (c) => {
   return c.render(
-    <div class="min-h-screen">
+    <div class="min-h-screen bg-gray-50">
       <nav class="bg-white shadow-md">
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <a href="/dashboard" class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent hover:opacity-80 transition cursor-pointer">
-            エクセルまもる君
+            🏠 エクセルまもる君
           </a>
           <div class="flex gap-4 items-center">
-            <a 
-              id="upgradeBtn"
-              href="https://www.netpr.biz/report-creation-orderform" 
-              target="_blank"
-              rel="noopener noreferrer"
-              class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition"
-            >
-              プランアップグレード
-            </a>
-            <button id="contactBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer">
-              <i class="fas fa-envelope mr-1"></i>お問い合わせ
-            </button>
-            <button id="accountBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer">
-              <i class="fas fa-user-circle mr-1"></i>アカウント情報
+            <button id="menuToggleBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer px-4 py-2 border rounded-lg hover:bg-gray-50 transition">
+              ≡ メニュー ▼
             </button>
             <button id="logoutBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer">
               ログアウト
             </button>
           </div>
         </div>
+        
+        {/* 折りたたみメニュー */}
+        <div id="dropdownMenu" class="hidden bg-white border-t shadow-lg">
+          <div class="max-w-7xl mx-auto px-4 py-4">
+            <ul class="space-y-2">
+              <li>
+                <a href="/dashboard" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition">
+                  🏠 TOP
+                </a>
+              </li>
+              <li>
+                <a href="/quotes" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition">
+                  📋 見積書管理
+                </a>
+              </li>
+              <li>
+                <button id="formsMenuBtn" class="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition text-left">
+                  📝 フォーム管理
+                </button>
+              </li>
+              <li>
+                <button id="contactBtn" class="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition text-left">
+                  📧 お問い合わせ
+                </button>
+              </li>
+              <li>
+                <button id="accountBtn" class="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition text-left">
+                  👤 アカウント情報
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
       </nav>
       
       <div class="max-w-7xl mx-auto px-4 py-8">
-        <div class="mb-8 flex justify-between items-center">
-          <div>
-            <h2 class="text-2xl font-bold mb-2" id="userGreeting">こんにちは、ユーザーさん</h2>
-            <p class="text-gray-600" id="planStatus">読み込み中...</p>
-          </div>
+        {/* プランアップグレードボタン（左上） */}
+        <div class="mb-6">
+          <a 
+            id="upgradeBtn"
+            href="https://www.netpr.biz/report-creation-orderform" 
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition"
+          >
+            ⚡ プランアップグレード
+          </a>
         </div>
         
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
           <div class="flex justify-between items-center mb-6">
             <h3 class="text-lg font-bold">マイテンプレート</h3>
-            <div class="flex gap-2">
-              <a 
-                href="/quotes"
-                class="bg-green-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-700 transition"
-              >
-                <i class="fas fa-file-invoice mr-2"></i>見積書管理
-              </a>
-              <button id="uploadBtn" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
-                <i class="fas fa-upload mr-2"></i>新しいテンプレートを作成
-              </button>
-            </div>
+            <button id="uploadBtn" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
+              <i class="fas fa-upload mr-2"></i>新しいテンプレートを作成
+            </button>
           </div>
           <div id="templatesList">
             <p class="text-gray-500 text-center py-8">テンプレートがまだありません</p>

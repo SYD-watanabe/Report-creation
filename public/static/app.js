@@ -170,6 +170,31 @@ async function initDashboard() {
   // テンプレート一覧を読み込み
   await loadTemplates()
   
+  // メニュートグルボタン
+  const menuToggleBtn = document.getElementById('menuToggleBtn')
+  const dropdownMenu = document.getElementById('dropdownMenu')
+  
+  if (menuToggleBtn && dropdownMenu) {
+    menuToggleBtn.addEventListener('click', () => {
+      dropdownMenu.classList.toggle('hidden')
+    })
+    
+    // メニュー外をクリックしたら閉じる
+    document.addEventListener('click', (e) => {
+      if (!menuToggleBtn.contains(e.target) && !dropdownMenu.contains(e.target)) {
+        dropdownMenu.classList.add('hidden')
+      }
+    })
+  }
+  
+  // フォーム管理ボタン
+  const formsMenuBtn = document.getElementById('formsMenuBtn')
+  if (formsMenuBtn) {
+    formsMenuBtn.addEventListener('click', () => {
+      alert('フォーム管理機能は開発中です。\n各テンプレートの詳細ページからフォームを作成・管理できます。')
+    })
+  }
+  
   // アップロードボタン
   const uploadBtn = document.getElementById('uploadBtn')
   const uploadModal = document.getElementById('uploadModal')
@@ -255,30 +280,18 @@ async function refreshUserInfo() {
   }
 }
 
-// プラン情報を表示
+// プラン情報を表示（プランアップグレードボタンの表示制御）
 function updatePlanStatus() {
   const user = JSON.parse(localStorage.getItem('user') || '{}')
-  const planStatusElement = document.getElementById('planStatus')
   const upgradeBtn = document.getElementById('upgradeBtn')
   
-  if (planStatusElement && user) {
-    const planName = user.current_plan === 'premium' ? 'プレミアムプラン' : 'フリープラン'
-    const templatesCount = user.templates_created || 0
-    
+  if (upgradeBtn && user) {
     if (user.current_plan === 'premium') {
-      planStatusElement.innerHTML = `<span class="text-purple-600 font-semibold"><i class="fas fa-crown mr-2"></i>${planName}</span> | テンプレート: ${templatesCount}個作成済み`
-      
       // プレミアムユーザーには「プランアップグレード」ボタンを非表示
-      if (upgradeBtn) {
-        upgradeBtn.style.display = 'none'
-      }
+      upgradeBtn.style.display = 'none'
     } else {
-      planStatusElement.innerHTML = `<span class="text-gray-600">${planName}</span> | テンプレート: ${templatesCount} / 1 使用中`
-      
       // フリーユーザーには「プランアップグレード」ボタンを表示
-      if (upgradeBtn) {
-        upgradeBtn.style.display = 'inline-block'
-      }
+      upgradeBtn.style.display = 'inline-flex'
     }
   }
 }
