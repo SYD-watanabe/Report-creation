@@ -408,6 +408,9 @@ async function initTemplateDetail() {
   // テンプレート情報を読み込み
   await loadTemplateDetail(templateId)
   
+  // 【プロトタイプ】Excelプレビューを読み込み
+  await loadExcelPreview(templateId)
+  
   // 項目一覧を読み込み
   await loadTemplateFields(templateId)
   
@@ -1022,4 +1025,103 @@ async function handleSaveAccount(e) {
     console.error('Save account error:', error)
     alert('更新に失敗しました')
   }
+}
+
+// 【プロトタイプ】Excelプレビューを読み込み
+async function loadExcelPreview(templateId) {
+  try {
+    const { data } = await apiCall(`/api/templates/${templateId}/preview`)
+    
+    if (data.success) {
+      const { cells, rowCount, colCount } = data.data
+      
+      // セルデータをグリッド形式に変換
+      const grid = []
+      for (let r = 1; r <= rowCount; r++) {
+        grid[r] = {}
+        for (let c = 1; c <= colCount; c++) {
+          grid[r][c] = null
+        }
+      }
+      
+      cells.forEach(cell => {
+        grid[cell.row][cell.col] = cell
+      })
+      
+      // HTMLテーブルを生成
+      let html = '<table class="w-full border-collapse text-xs">'
+      
+      // ヘッダー行（列番号 A, B, C...）
+      html += '<thead><tr><th class="border border-gray-300 bg-gray-100 px-2 py-1 w-12"></th>'
+      for (let c = 1; c <= colCount; c++) {
+        const colName = String.fromCharCode(64 + c) // A, B, C...
+        html += `<th class="border border-gray-300 bg-gray-100 px-2 py-1">${colName}</th>`
+      }
+      html += '</tr></thead><tbody>'
+      
+      // データ行
+      for (let r = 1; r <= rowCount; r++) {
+        html += `<tr><td class="border border-gray-300 bg-gray-100 px-2 py-1 text-center font-semibold">${r}</td>`
+        for (let c = 1; c <= colCount; c++) {
+          const cell = grid[r][c]
+          const value = cell && cell.value ? cell.value : ''
+          const formula = cell && cell.formula ? '(関数)' : ''
+          const address = cell ? cell.address : ''
+          
+          html += `<td class="border border-gray-300 px-2 py-1 hover:bg-blue-50 cursor-pointer excel-cell" 
+                      data-address="${address}" 
+                      data-row="${r}" 
+                      data-col="${c}"
+                      onclick="handleCellClick('${address}', ${r}, ${c})">`
+          html += `${value} ${formula}`
+          html += '</td>'
+        }
+        html += '</tr>'
+      }
+      html += '</tbody></table>'
+      
+      document.getElementById('excelPreview').innerHTML = html
+      
+      // フォームプレビューも更新
+      updateFormPreview()
+      
+    } else {
+      document.getElementById('excelPreview').innerHTML = '<p class="text-red-600 text-center py-4">プレビューの読み込みに失敗しました</p>'
+    }
+  } catch (error) {
+    console.error('Load Excel preview error:', error)
+    document.getElementById('excelPreview').innerHTML = '<p class="text-red-600 text-center py-4">プレビューの読み込みに失敗しました</p>'
+  }
+}
+
+// 【プロトタイプ】セルクリック処理
+function handleCellClick(address, row, col) {
+  console.log('セルクリック:', { address, row, col })
+  alert(`セル ${address} (行:${row}, 列:${col}) をクリックしました`)
+}
+
+// 【プロトタイプ】フォームプレビューを更新
+function updateFormPreview() {
+  const fields = AppState.fields || []
+  
+  if (fields.length === 0) {
+    document.getElementById('formPreview').innerHTML = '<p class="text-gray-500 text-center py-8">項目がありません</p>'
+    return
+  }
+  
+  let html = '<div class="space-y-4">'
+  fields.forEach(field => {
+    if (field.include_in_form !== 0) {
+      html += `
+        <div class="border border-gray-200 rounded p-3">
+          <div class="font-semibold text-sm mb-1">${escapeHtml(field.field_name)}</div>
+          <div class="text-xs text-gray-500">セル: ${escapeHtml(field.cell_position || 'N/A')}</div>
+          <div class="text-xs text-gray-500">タイプ: ${escapeHtml(field.field_type)}</div>
+        </div>
+      `
+    }
+  })
+  html += '</div>'
+  
+  document.getElementById('formPreview').innerHTML = html
 }

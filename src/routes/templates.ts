@@ -544,4 +544,83 @@ templates.patch('/:id/fields', async (c) => {
   }
 });
 
+// Excelプレビュー取得（プロトタイプ）
+templates.get('/:id/preview', async (c) => {
+  try {
+    const user = c.get('user');
+    const { env } = c;
+    const templateId = c.req.param('id');
+
+    // テンプレート情報を取得
+    const template = await env.DB.prepare(`
+      SELECT file_path, file_type FROM templates
+      WHERE template_id = ? AND user_id = ?
+    `).bind(templateId, user.user_id).first();
+
+    if (!template) {
+      return c.json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'テンプレートが見つかりません' }
+      }, 404);
+    }
+
+    // R2からExcelファイルを取得
+    const file = await env.R2.get(template.file_path as string);
+    if (!file) {
+      return c.json({
+        success: false,
+        error: { code: 'FILE_NOT_FOUND', message: 'ファイルが見つかりません' }
+      }, 404);
+    }
+
+    // ExcelJSでファイルを読み込み
+    const ExcelJS = await import('exceljs');
+    const workbook = new ExcelJS.Workbook();
+    const buffer = await file.arrayBuffer();
+    await workbook.xlsx.load(buffer);
+
+    // 最初のシートを取得
+    const worksheet = workbook.worksheets[0];
+    const cells: any[] = [];
+
+    // セルデータを取得（最大20行×20列）
+    const maxRows = Math.min(worksheet.rowCount, 20);
+    const maxCols = 20;
+
+    worksheet.eachRow((row, rowNumber) => {
+      if (rowNumber > maxRows) return;
+      
+      row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+        if (colNumber > maxCols) return;
+
+        cells.push({
+          row: rowNumber,
+          col: colNumber,
+          address: cell.address,
+          value: cell.value,
+          formula: cell.formula || null,
+          type: cell.type
+        });
+      });
+    });
+
+    return c.json({
+      success: true,
+      data: {
+        sheetName: worksheet.name,
+        rowCount: maxRows,
+        colCount: maxCols,
+        cells: cells
+      }
+    });
+
+  } catch (error) {
+    console.error('Preview error:', error);
+    return c.json({
+      success: false,
+      error: { code: 'SERVER_ERROR', message: 'プレビューの取得に失敗しました' }
+    }, 500);
+  }
+});
+
 export default templates;
