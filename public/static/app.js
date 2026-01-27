@@ -161,6 +161,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ダッシュボード初期化
 async function initDashboard() {
+  // ユーザー情報を更新（最新のプラン情報を取得）
+  await refreshUserInfo()
+  
+  // プラン情報を表示
+  updatePlanStatus()
+  
   // テンプレート一覧を読み込み
   await loadTemplates()
   
@@ -228,6 +234,41 @@ async function initDashboard() {
     closeContactBtn.addEventListener('click', () => {
       contactModal.classList.add('hidden')
     })
+  }
+}
+
+// ユーザー情報を最新の状態に更新
+async function refreshUserInfo() {
+  try {
+    const { data } = await apiCall('/api/auth/profile')
+    
+    if (data.success) {
+      // LocalStorageのユーザー情報を更新
+      const user = data.data.user
+      localStorage.setItem('user', JSON.stringify(user))
+      AppState.user = user
+      
+      console.log('ユーザー情報を更新しました:', user)
+    }
+  } catch (error) {
+    console.error('Failed to refresh user info:', error)
+  }
+}
+
+// プラン情報を表示
+function updatePlanStatus() {
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+  const planStatusElement = document.getElementById('planStatus')
+  
+  if (planStatusElement && user) {
+    const planName = user.current_plan === 'premium' ? 'プレミアムプラン' : 'フリープラン'
+    const templatesCount = user.templates_created || 0
+    
+    if (user.current_plan === 'premium') {
+      planStatusElement.innerHTML = `<span class="text-purple-600 font-semibold"><i class="fas fa-crown mr-2"></i>${planName}</span> | テンプレート: ${templatesCount}個作成済み`
+    } else {
+      planStatusElement.innerHTML = `<span class="text-gray-600">${planName}</span> | テンプレート: ${templatesCount} / 1 使用中`
+    }
   }
 }
 
@@ -370,10 +411,7 @@ async function deleteTemplate(templateId, templateName) {
           localStorage.setItem('user', JSON.stringify(user))
           
           // プランステータスを更新
-          const planStatusElement = document.getElementById('planStatus')
-          if (planStatusElement) {
-            planStatusElement.textContent = `テンプレート: ${user.templates_created} / 1 使用中`
-          }
+          updatePlanStatus()
         }
       } catch (updateError) {
         console.error('ユーザー情報更新エラー（無視）:', updateError)

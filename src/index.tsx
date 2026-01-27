@@ -192,8 +192,11 @@ app.get('/dashboard', (c) => {
       </nav>
       
       <div class="max-w-7xl mx-auto px-4 py-8">
-        <div class="mb-8">
-          <h2 class="text-2xl font-bold mb-4" id="userGreeting">こんにちは、ユーザーさん</h2>
+        <div class="mb-8 flex justify-between items-center">
+          <div>
+            <h2 class="text-2xl font-bold mb-2" id="userGreeting">こんにちは、ユーザーさん</h2>
+            <p class="text-gray-600" id="planStatus">読み込み中...</p>
+          </div>
         </div>
         
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
