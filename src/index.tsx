@@ -50,6 +50,58 @@ app.route('/api/forms', formRoutes)
 // レンダラー適用
 app.use(renderer)
 
+// 共通ヘッダーコンポーネント
+const Header = () => (
+  <nav class="bg-white shadow-md">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+      <a href="/dashboard" class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent hover:opacity-80 transition cursor-pointer">
+        🏠 エクセルまもる君
+      </a>
+      <div class="flex gap-4 items-center">
+        <button id="menuToggleBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer px-4 py-2 border rounded-lg hover:bg-gray-50 transition">
+          ≡ メニュー ▼
+        </button>
+        <button id="logoutBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer">
+          ログアウト
+        </button>
+      </div>
+    </div>
+    
+    {/* 折りたたみメニュー */}
+    <div id="dropdownMenu" class="hidden bg-white border-t shadow-lg">
+      <div class="max-w-7xl mx-auto px-4 py-4">
+        <ul class="space-y-2">
+          <li>
+            <a href="/dashboard" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition">
+              🏠 TOP
+            </a>
+          </li>
+          <li>
+            <a href="/quotes" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition">
+              📋 見積書管理
+            </a>
+          </li>
+          <li>
+            <button id="formsMenuBtn" class="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition text-left">
+              📝 フォーム管理
+            </button>
+          </li>
+          <li>
+            <button id="contactBtn" class="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition text-left">
+              📧 お問い合わせ
+            </button>
+          </li>
+          <li>
+            <button id="accountBtn" class="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition text-left">
+              👤 アカウント情報
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+)
+
 // ホームページ（ログイン画面）
 app.get('/', (c) => {
   return c.render(
@@ -164,54 +216,7 @@ app.get('/register', (c) => {
 app.get('/dashboard', (c) => {
   return c.render(
     <div class="min-h-screen bg-gray-50">
-      <nav class="bg-white shadow-md">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <a href="/dashboard" class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent hover:opacity-80 transition cursor-pointer">
-            🏠 エクセルまもる君
-          </a>
-          <div class="flex gap-4 items-center">
-            <button id="menuToggleBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer px-4 py-2 border rounded-lg hover:bg-gray-50 transition">
-              ≡ メニュー ▼
-            </button>
-            <button id="logoutBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer">
-              ログアウト
-            </button>
-          </div>
-        </div>
-        
-        {/* 折りたたみメニュー */}
-        <div id="dropdownMenu" class="hidden bg-white border-t shadow-lg">
-          <div class="max-w-7xl mx-auto px-4 py-4">
-            <ul class="space-y-2">
-              <li>
-                <a href="/dashboard" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition">
-                  🏠 TOP
-                </a>
-              </li>
-              <li>
-                <a href="/quotes" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition">
-                  📋 見積書管理
-                </a>
-              </li>
-              <li>
-                <button id="formsMenuBtn" class="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition text-left">
-                  📝 フォーム管理
-                </button>
-              </li>
-              <li>
-                <button id="contactBtn" class="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition text-left">
-                  📧 お問い合わせ
-                </button>
-              </li>
-              <li>
-                <button id="accountBtn" class="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition text-left">
-                  👤 アカウント情報
-                </button>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </nav>
+      <Header />
       
       <div class="max-w-7xl mx-auto px-4 py-8">
         {/* プランアップグレードボタン（左上） */}
@@ -552,30 +557,8 @@ app.get('/templates/:id', (c) => {
   const templateId = c.req.param('id')
   
   return c.render(
-    <div class="min-h-screen">
-      <nav class="bg-white shadow-md">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <a href="/dashboard" class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent hover:opacity-80 transition cursor-pointer">
-            エクセルまもる君
-          </a>
-          <div class="flex gap-4 items-center">
-            <a 
-              href="https://www.netpr.biz/report-creation-orderform" 
-              target="_blank"
-              rel="noopener noreferrer"
-              class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition"
-            >
-              プランアップグレード
-            </a>
-            <a href="/dashboard" class="text-gray-600 hover:text-gray-800">
-              <i class="fas fa-arrow-left mr-2"></i>ダッシュボードへ戻る
-            </a>
-            <button id="logoutBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer">
-              ログアウト
-            </button>
-          </div>
-        </div>
-      </nav>
+    <div class="min-h-screen bg-gray-50">
+      <Header />
       
       <div class="max-w-7xl mx-auto px-4 py-8">
         <div class="mb-8">
@@ -675,30 +658,8 @@ app.get('/templates/:id/forms', (c) => {
   const templateId = c.req.param('id')
   
   return c.render(
-    <div class="min-h-screen">
-      <nav class="bg-white shadow-md">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <a href="/dashboard" class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent hover:opacity-80 transition cursor-pointer">
-            エクセルまもる君
-          </a>
-          <div class="flex gap-4 items-center">
-            <a 
-              href="https://www.netpr.biz/report-creation-orderform" 
-              target="_blank"
-              rel="noopener noreferrer"
-              class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition"
-            >
-              プランアップグレード
-            </a>
-            <a href={`/templates/${templateId}`} class="text-gray-600 hover:text-gray-800">
-              <i class="fas fa-arrow-left mr-2"></i>テンプレート詳細へ戻る
-            </a>
-            <button id="logoutBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer">
-              ログアウト
-            </button>
-          </div>
-        </div>
-      </nav>
+    <div class="min-h-screen bg-gray-50">
+      <Header />
       
       <div class="max-w-7xl mx-auto px-4 py-8">
         <div class="mb-8">
@@ -776,30 +737,8 @@ app.get('/templates/:id/forms', (c) => {
 // 見積書管理ページ
 app.get('/quotes', (c) => {
   return c.render(
-    <div class="min-h-screen">
-      <nav class="bg-white shadow-md">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <a href="/dashboard" class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent hover:opacity-80 transition cursor-pointer">
-            エクセルまもる君
-          </a>
-          <div class="flex gap-4 items-center">
-            <a 
-              href="https://www.netpr.biz/report-creation-orderform" 
-              target="_blank"
-              rel="noopener noreferrer"
-              class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition"
-            >
-              プランアップグレード
-            </a>
-            <a href="/dashboard" class="text-gray-600 hover:text-gray-800">
-              <i class="fas fa-arrow-left mr-2"></i>ダッシュボードへ戻る
-            </a>
-            <button id="logoutBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer">
-              ログアウト
-            </button>
-          </div>
-        </div>
-      </nav>
+    <div class="min-h-screen bg-gray-50">
+      <Header />
       
       <div class="max-w-7xl mx-auto px-4 py-8">
         <div class="mb-8">
