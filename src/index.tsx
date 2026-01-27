@@ -668,9 +668,8 @@ app.get('/templates/:id', (c) => {
         <div class="grid grid-cols-10 gap-6 mb-8">
           {/* 左側: Excelプレビュー（70%幅） */}
           <div class="col-span-7 bg-white rounded-xl shadow-lg p-6">
-            <div class="mb-4">
-              <h3 class="text-lg font-bold">📄 読み込んだExcel</h3>
-              <p class="text-sm text-gray-600 mt-1">セルをクリックして担当者に入力して欲しい項目を選択してください</p>
+            <div class="mb-4 bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+              <p class="text-base font-semibold text-blue-800">📌 担当者に入力して欲しい箇所のセルを選択してください</p>
             </div>
             <div id="excelPreview" class="border rounded-lg overflow-auto" style="max-height: 600px;">
               <p class="text-gray-500 text-center py-8">読み込み中...</p>
