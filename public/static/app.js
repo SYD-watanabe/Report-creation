@@ -343,28 +343,51 @@ async function deleteTemplate(templateId, templateName) {
   }
   
   try {
-    const { data } = await apiCall(`/api/templates/${templateId}`, {
+    console.log('削除開始:', templateId)
+    const response = await apiCall(`/api/templates/${templateId}`, {
       method: 'DELETE'
     })
     
+    console.log('削除APIレスポンス:', response)
+    const data = response.data
+    
     if (data.success) {
-      alert('テンプレートを削除しました')
+      console.log('削除成功、テンプレート一覧を再読み込み')
       
       // テンプレート一覧を再読み込み
-      await loadTemplates()
+      try {
+        await loadTemplates()
+        console.log('テンプレート一覧の再読み込み完了')
+      } catch (loadError) {
+        console.error('テンプレート一覧の再読み込みエラー（無視）:', loadError)
+      }
       
       // ユーザー情報を更新
-      const user = JSON.parse(localStorage.getItem('user'))
-      user.templates_created = Math.max(0, (user.templates_created || 0) - 1)
-      localStorage.setItem('user', JSON.stringify(user))
+      try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}')
+        if (user) {
+          user.templates_created = Math.max(0, (user.templates_created || 0) - 1)
+          localStorage.setItem('user', JSON.stringify(user))
+          
+          // プランステータスを更新
+          const planStatusElement = document.getElementById('planStatus')
+          if (planStatusElement) {
+            planStatusElement.textContent = `テンプレート: ${user.templates_created} / 1 使用中`
+          }
+        }
+      } catch (updateError) {
+        console.error('ユーザー情報更新エラー（無視）:', updateError)
+      }
       
-      // プランステータスを更新
-      document.getElementById('planStatus').textContent = `テンプレート: ${user.templates_created} / 1 使用中`
+      console.log('削除処理が正常に完了しました')
+      alert('テンプレートを削除しました')
     } else {
-      alert(data.error.message || '削除に失敗しました')
+      console.error('削除API失敗:', data.error)
+      alert(data.error?.message || '削除に失敗しました')
     }
   } catch (error) {
     console.error('Delete error:', error)
+    console.error('Error stack:', error.stack)
     alert('削除に失敗しました')
   }
 }
