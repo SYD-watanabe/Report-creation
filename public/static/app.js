@@ -122,6 +122,9 @@ async function handleRegister(event) {
 
 // ページ読み込み時の初期化
 document.addEventListener('DOMContentLoaded', () => {
+  // 共通初期化処理
+  initCommon()
+  
   // ログインフォーム
   const loginForm = document.getElementById('loginForm')
   if (loginForm) {
@@ -157,25 +160,22 @@ document.addEventListener('DOMContentLoaded', () => {
       initTemplateDetail()
     }
   }
+  
+  // 見積書管理ページ
+  if (window.location.pathname === '/quotes') {
+    // 見積書管理ページの初期化処理がある場合はここに追加
+  }
 })
 
-// ダッシュボード初期化
-async function initDashboard() {
-  // ユーザー情報を更新（最新のプラン情報を取得）
-  await refreshUserInfo()
-  
-  // プラン情報を表示
-  updatePlanStatus()
-  
-  // テンプレート一覧を読み込み
-  await loadTemplates()
-  
+// 共通初期化処理（全ページで実行）
+function initCommon() {
   // メニュートグルボタン
   const menuToggleBtn = document.getElementById('menuToggleBtn')
   const dropdownMenu = document.getElementById('dropdownMenu')
   
   if (menuToggleBtn && dropdownMenu) {
-    menuToggleBtn.addEventListener('click', () => {
+    menuToggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation()
       dropdownMenu.classList.toggle('hidden')
     })
     
@@ -194,6 +194,95 @@ async function initDashboard() {
       alert('フォーム管理機能は開発中です。\n各テンプレートの詳細ページからフォームを作成・管理できます。')
     })
   }
+  
+  // アカウント情報ボタン
+  const accountBtn = document.getElementById('accountBtn')
+  const accountModal = document.getElementById('accountModal')
+  const cancelAccountBtn = document.getElementById('cancelAccountBtn')
+  const accountForm = document.getElementById('accountForm')
+
+  if (accountBtn && accountModal) {
+    accountBtn.addEventListener('click', () => {
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      const emailInput = document.getElementById('accountEmail')
+      const nameInput = document.getElementById('accountName')
+      
+      if (emailInput) emailInput.value = user.email || ''
+      if (nameInput) nameInput.value = user.name || ''
+      
+      accountModal.classList.remove('hidden')
+    })
+  }
+
+  if (cancelAccountBtn && accountModal) {
+    cancelAccountBtn.addEventListener('click', () => {
+      accountModal.classList.add('hidden')
+      if (accountForm) accountForm.reset()
+    })
+  }
+
+  if (accountForm) {
+    accountForm.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const name = document.getElementById('accountName').value
+      
+      try {
+        const { data } = await apiCall('/api/auth/update-profile', {
+          method: 'PUT',
+          body: JSON.stringify({ name })
+        })
+        
+        if (data.success) {
+          const user = JSON.parse(localStorage.getItem('user'))
+          user.name = name
+          localStorage.setItem('user', JSON.stringify(user))
+          
+          // 挨拶を更新
+          const greetingElement = document.getElementById('greeting')
+          if (greetingElement) {
+            greetingElement.textContent = `こんにちは、${name}さん`
+          }
+          
+          alert('アカウント情報を更新しました')
+          accountModal.classList.add('hidden')
+        } else {
+          alert(data.error.message || '更新に失敗しました')
+        }
+      } catch (error) {
+        console.error('Update profile error:', error)
+        alert('更新に失敗しました')
+      }
+    })
+  }
+  
+  // お問い合わせボタン
+  const contactBtn = document.getElementById('contactBtn')
+  const contactModal = document.getElementById('contactModal')
+  const closeContactBtn = document.getElementById('closeContactBtn')
+  
+  if (contactBtn && contactModal) {
+    contactBtn.addEventListener('click', () => {
+      contactModal.classList.remove('hidden')
+    })
+  }
+  
+  if (closeContactBtn && contactModal) {
+    closeContactBtn.addEventListener('click', () => {
+      contactModal.classList.add('hidden')
+    })
+  }
+}
+
+// ダッシュボード初期化
+async function initDashboard() {
+  // ユーザー情報を更新（最新のプラン情報を取得）
+  await refreshUserInfo()
+  
+  // プラン情報を表示
+  updatePlanStatus()
+  
+  // テンプレート一覧を読み込み
+  await loadTemplates()
   
   // アップロードボタン
   const uploadBtn = document.getElementById('uploadBtn')
@@ -216,49 +305,6 @@ async function initDashboard() {
   
   if (uploadForm) {
     uploadForm.addEventListener('submit', handleTemplateUpload)
-  }
-
-  // アカウント情報ボタン
-  const accountBtn = document.getElementById('accountBtn')
-  const accountModal = document.getElementById('accountModal')
-  const cancelAccountBtn = document.getElementById('cancelAccountBtn')
-  const accountForm = document.getElementById('accountForm')
-
-  if (accountBtn) {
-    accountBtn.addEventListener('click', () => {
-      const user = JSON.parse(localStorage.getItem('user') || '{}')
-      document.getElementById('accountEmail').value = user.email || ''
-      document.getElementById('accountName').value = user.name || ''
-      accountModal.classList.remove('hidden')
-    })
-  }
-
-  if (cancelAccountBtn) {
-    cancelAccountBtn.addEventListener('click', () => {
-      accountModal.classList.add('hidden')
-      accountForm.reset()
-    })
-  }
-
-  if (accountForm) {
-    accountForm.addEventListener('submit', handleSaveAccount)
-  }
-
-  // お問い合わせボタン
-  const contactBtn = document.getElementById('contactBtn')
-  const contactModal = document.getElementById('contactModal')
-  const closeContactBtn = document.getElementById('closeContactBtn')
-
-  if (contactBtn) {
-    contactBtn.addEventListener('click', () => {
-      contactModal.classList.remove('hidden')
-    })
-  }
-
-  if (closeContactBtn) {
-    closeContactBtn.addEventListener('click', () => {
-      contactModal.classList.add('hidden')
-    })
   }
 }
 
