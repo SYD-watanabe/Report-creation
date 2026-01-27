@@ -1328,15 +1328,24 @@ function updateFormPreview() {
   let html = '<div class="space-y-3">'
   fields.forEach((field, index) => {
     html += `
-      <div class="border border-gray-300 rounded-lg p-3 bg-white hover:shadow-md transition">
+      <div class="border border-gray-300 rounded-lg p-3 bg-white hover:shadow-md transition cursor-move"
+           draggable="true"
+           data-field-id="${field.temp_id}"
+           ondragstart="handleDragStart(event, ${field.temp_id})"
+           ondragover="handleDragOver(event)"
+           ondrop="handleDrop(event, ${field.temp_id})"
+           ondragend="handleDragEnd(event)">
         <div class="flex justify-between items-start mb-2">
           <div class="flex-1">
-            <div class="font-semibold text-sm text-gray-800 mb-1">
-              <i class="fas fa-edit mr-1 text-blue-500"></i>
-              <span contenteditable="true" 
-                    id="field-name-${field.temp_id}"
-                    class="hover:bg-yellow-50 px-1 rounded"
-                    onblur="updateFieldName(${field.temp_id}, this.textContent)">${escapeHtml(field.field_name)}</span>
+            <div class="flex items-center mb-1">
+              <i class="fas fa-grip-vertical mr-2 text-gray-400" title="ドラッグして並び替え"></i>
+              <div class="font-semibold text-sm text-gray-800">
+                <i class="fas fa-edit mr-1 text-blue-500"></i>
+                <span contenteditable="true" 
+                      id="field-name-${field.temp_id}"
+                      class="hover:bg-yellow-50 px-1 rounded"
+                      onblur="updateFieldName(${field.temp_id}, this.textContent)">${escapeHtml(field.field_name)}</span>
+              </div>
             </div>
             <div class="text-xs text-gray-500">
               <i class="fas fa-table mr-1"></i>セル: <span class="font-mono font-semibold">${escapeHtml(field.cell_position)}</span>
@@ -1351,7 +1360,7 @@ function updateFormPreview() {
           </button>
         </div>
         <div class="text-xs text-gray-400 italic">
-          項目名をクリックして編集できます
+          項目名をクリックして編集 / ドラッグして並び替え
         </div>
       </div>
     `
@@ -1425,4 +1434,72 @@ function showAddFieldManuallyDialog() {
   }
   
   updateFormPreview()
+}
+
+// ドラッグ&ドロップ用の状態
+let draggedFieldId = null
+
+// ドラッグ開始
+function handleDragStart(event, fieldId) {
+  draggedFieldId = fieldId
+  event.target.style.opacity = '0.5'
+  event.dataTransfer.effectAllowed = 'move'
+  event.dataTransfer.setData('text/html', event.target.innerHTML)
+}
+
+// ドラッグオーバー
+function handleDragOver(event) {
+  if (event.preventDefault) {
+    event.preventDefault()
+  }
+  event.dataTransfer.dropEffect = 'move'
+  
+  // ドラッグ中の視覚的フィードバック
+  const target = event.currentTarget
+  if (target.getAttribute('draggable') === 'true') {
+    target.style.borderTop = '3px solid #3b82f6'
+  }
+  
+  return false
+}
+
+// ドロップ
+function handleDrop(event, targetFieldId) {
+  if (event.stopPropagation) {
+    event.stopPropagation()
+  }
+  
+  event.currentTarget.style.borderTop = ''
+  
+  if (draggedFieldId === targetFieldId) {
+    return false
+  }
+  
+  // 配列内の項目を入れ替え
+  const draggedIndex = AppState.formFields.findIndex(f => f.temp_id === draggedFieldId)
+  const targetIndex = AppState.formFields.findIndex(f => f.temp_id === targetFieldId)
+  
+  if (draggedIndex !== -1 && targetIndex !== -1) {
+    const [draggedItem] = AppState.formFields.splice(draggedIndex, 1)
+    AppState.formFields.splice(targetIndex, 0, draggedItem)
+    
+    console.log('項目を並び替えました:', { draggedIndex, targetIndex })
+    
+    // フォームプレビューを更新
+    updateFormPreview()
+  }
+  
+  return false
+}
+
+// ドラッグ終了
+function handleDragEnd(event) {
+  event.target.style.opacity = '1'
+  
+  // すべての要素のボーダーをリセット
+  document.querySelectorAll('[draggable="true"]').forEach(el => {
+    el.style.borderTop = ''
+  })
+  
+  draggedFieldId = null
 }
