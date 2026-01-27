@@ -171,6 +171,7 @@ app.get('/dashboard', (c) => {
           </a>
           <div class="flex gap-4 items-center">
             <a 
+              id="upgradeBtn"
               href="https://www.netpr.biz/report-creation-orderform" 
               target="_blank"
               rel="noopener noreferrer"

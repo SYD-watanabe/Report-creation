@@ -259,6 +259,7 @@ async function refreshUserInfo() {
 function updatePlanStatus() {
   const user = JSON.parse(localStorage.getItem('user') || '{}')
   const planStatusElement = document.getElementById('planStatus')
+  const upgradeBtn = document.getElementById('upgradeBtn')
   
   if (planStatusElement && user) {
     const planName = user.current_plan === 'premium' ? 'プレミアムプラン' : 'フリープラン'
@@ -266,8 +267,18 @@ function updatePlanStatus() {
     
     if (user.current_plan === 'premium') {
       planStatusElement.innerHTML = `<span class="text-purple-600 font-semibold"><i class="fas fa-crown mr-2"></i>${planName}</span> | テンプレート: ${templatesCount}個作成済み`
+      
+      // プレミアムユーザーには「プランアップグレード」ボタンを非表示
+      if (upgradeBtn) {
+        upgradeBtn.style.display = 'none'
+      }
     } else {
       planStatusElement.innerHTML = `<span class="text-gray-600">${planName}</span> | テンプレート: ${templatesCount} / 1 使用中`
+      
+      // フリーユーザーには「プランアップグレード」ボタンを表示
+      if (upgradeBtn) {
+        upgradeBtn.style.display = 'inline-block'
+      }
     }
   }
 }
