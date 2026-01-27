@@ -430,6 +430,15 @@ async function initTemplateDetail() {
     extractBtn.addEventListener('click', () => handleExtractFields(templateId))
   }
   
+  // フォーム作成ボタン
+  const createFormFromPreviewBtn = document.getElementById('createFormFromPreviewBtn')
+  if (createFormFromPreviewBtn) {
+    createFormFromPreviewBtn.addEventListener('click', () => {
+      // フォーム管理ページに遷移
+      window.location.href = `/templates/${templateId}/forms`
+    })
+  }
+  
   // autoExtract=trueの場合、自動でAI抽出を実行
   if (autoExtract === 'true' && extractBtn) {
     // URLパラメータをクリア

@@ -578,8 +578,19 @@ app.get('/templates/:id', (c) => {
           {/* 右側: フォームプレビュー（30%幅） */}
           <div class="col-span-3 bg-white rounded-xl shadow-lg p-6">
             <h3 class="text-lg font-bold mb-4">📝 担当者入力フォーム プレビュー</h3>
-            <div id="formPreview" class="border rounded-lg p-4 overflow-auto" style="max-height: 600px;">
+            <div id="formPreview" class="border rounded-lg p-4 overflow-auto" style="max-height: 500px;">
               <p class="text-gray-500 text-center py-8">項目がありません</p>
+            </div>
+            
+            {/* フォーム作成ボタン */}
+            <div class="mt-4">
+              <button 
+                id="createFormFromPreviewBtn" 
+                class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition flex items-center justify-center"
+              >
+                <i class="fas fa-plus-circle mr-2"></i>
+                フォーム作成
+              </button>
             </div>
           </div>
         </div>
