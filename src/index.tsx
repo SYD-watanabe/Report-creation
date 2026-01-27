@@ -589,12 +589,6 @@ app.get('/templates/:id', (c) => {
             <h3 class="text-lg font-bold">抽出された項目</h3>
             <div class="flex gap-2">
               <button 
-                id="manageFormsBtn"
-                class="bg-gradient-to-r from-green-600 to-teal-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition"
-              >
-                <i class="fas fa-clipboard-list mr-2"></i>フォーム管理
-              </button>
-              <button 
                 id="extractBtn" 
                 class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition"
               >

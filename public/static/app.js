@@ -440,14 +440,6 @@ async function initTemplateDetail() {
       handleExtractFields(templateId, true) // 自動実行フラグを追加
     }, 500)
   }
-  
-  // フォーム管理ボタン
-  const manageFormsBtn = document.getElementById('manageFormsBtn')
-  if (manageFormsBtn) {
-    manageFormsBtn.addEventListener('click', () => {
-      window.location.href = `/templates/${templateId}/forms`
-    })
-  }
 }
 
 // テンプレート詳細を読み込み
