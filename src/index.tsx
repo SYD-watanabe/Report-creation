@@ -38,11 +38,16 @@ app.route('/api/admin', adminRoutes)
 // フォームAPIルート（一部認証不要）
 app.use('/api/forms/*', async (c, next) => {
   const path = c.req.path;
-  // 公開フォーム関連は認証不要
-  if (path.match(/\/api\/forms\/[a-z0-9]+$/) || path.match(/\/api\/forms\/[a-z0-9]+\/submit$/)) {
+  // 公開フォーム関連は認証不要（8文字の英小文字+数字のランダムURL）
+  // 例: /api/forms/abc123xy または /api/forms/abc123xy/submit
+  // 数字のみのformId（例: /api/forms/51）は認証必要
+  if (path.match(/\/api\/forms\/[a-z0-9]{8}$/) && !path.match(/\/api\/forms\/\d+$/)) {
     return next();
   }
-  // その他は認証必要
+  if (path.match(/\/api\/forms\/[a-z0-9]{8}\/submit$/)) {
+    return next();
+  }
+  // その他（数字のみのformId、template指定など）は認証必要
   return authenticate(c, next);
 })
 app.route('/api/forms', formRoutes)
