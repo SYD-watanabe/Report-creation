@@ -319,7 +319,7 @@ function renderTemplates(templates) {
   if (!templatesList) return
   
   if (templates.length === 0) {
-    templatesList.innerHTML = '<p class="text-gray-500 text-center py-8">テンプレートがまだありません</p>'
+    templatesList.innerHTML = '' // 空の場合は何も表示しない
     return
   }
   

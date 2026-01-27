@@ -229,7 +229,7 @@ app.get('/dashboard', (c) => {
         
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
           <div id="templatesList">
-            <p class="text-gray-500 text-center py-8">テンプレートがまだありません</p>
+            {/* テンプレート一覧がここに表示される */}
           </div>
           
           {/* 新しいテンプレートを作成ボタン（中央配置、拡大） */}
