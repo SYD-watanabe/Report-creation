@@ -1353,7 +1353,7 @@ function updateFormPreview() {
             ${field.hasFormula ? '<div class="text-xs text-orange-600 mt-1"><i class="fas fa-exclamation-triangle mr-1"></i>数式セル</div>' : ''}
           </div>
           <button 
-            onclick="removeFieldFromForm(${field.temp_id})"
+            onclick="removeFieldFromForm(${field.temp_id}); event.stopPropagation();"
             class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded transition"
             title="削除">
             <i class="fas fa-trash"></i>
