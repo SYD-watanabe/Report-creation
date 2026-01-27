@@ -441,12 +441,17 @@ forms.delete('/:formId', async (c) => {
     const { env } = c;
     const formId = c.req.param('formId');
 
+    console.log('Delete form request:', { formId, userId: user.user_id });
+
     // フォームの所有者確認
     const form = await env.DB.prepare(`
       SELECT * FROM forms WHERE form_id = ? AND user_id = ?
     `).bind(formId, user.user_id).first();
 
+    console.log('Form found:', form);
+
     if (!form) {
+      console.log('Form not found or not owned by user');
       const response: ApiResponse = {
         success: false,
         error: {
@@ -458,9 +463,11 @@ forms.delete('/:formId', async (c) => {
     }
 
     // フォームを削除（CASCADE設定により関連データも削除）
-    await env.DB.prepare(`
+    const deleteResult = await env.DB.prepare(`
       DELETE FROM forms WHERE form_id = ? AND user_id = ?
     `).bind(formId, user.user_id).run();
+
+    console.log('Delete result:', deleteResult);
 
     const response: ApiResponse = {
       success: true,
@@ -470,6 +477,11 @@ forms.delete('/:formId', async (c) => {
     return c.json(response);
   } catch (error: any) {
     console.error('Form delete error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     const response: ApiResponse = {
       success: false,
       error: {
