@@ -1185,20 +1185,29 @@ async function toggleFormStatus(formId, isActive, templateId) {
 
 // フォームを削除
 async function deleteForm(formId, formTitle, templateId) {
+  console.log('フォーム削除開始:', { formId, formTitle, templateId })
+  
   if (!confirm(`フォーム「${formTitle}」を削除してもよろしいですか？\nこの操作は取り消せません。`)) {
+    console.log('削除をキャンセルしました')
     return
   }
   
   try {
-    const { data } = await apiCall(`/api/forms/${formId}`, {
+    console.log('削除API呼び出し:', `/api/forms/${formId}`)
+    const response = await apiCall(`/api/forms/${formId}`, {
       method: 'DELETE'
     })
     
+    console.log('削除APIレスポンス:', response)
+    const data = response.data
+    
     if (data.success) {
+      console.log('削除成功')
       alert('フォームを削除しました')
       await loadForms(templateId)
     } else {
-      alert(data.error.message || '削除に失敗しました')
+      console.error('削除API失敗:', data.error)
+      alert(data.error?.message || '削除に失敗しました')
     }
   } catch (error) {
     console.error('Delete form error:', error)

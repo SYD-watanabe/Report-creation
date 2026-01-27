@@ -761,61 +761,12 @@ app.get('/templates/:id/forms', (c) => {
         </div>
         
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <div class="flex justify-between items-center mb-6">
+          <div class="mb-6">
             <h3 class="text-lg font-bold">フォーム一覧</h3>
-            <button 
-              id="createFormBtn" 
-              class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition"
-            >
-              <i class="fas fa-plus mr-2"></i>新しいフォームを作成
-            </button>
           </div>
           <div id="formsList">
             <p class="text-gray-500 text-center py-8">読み込み中...</p>
           </div>
-        </div>
-      </div>
-
-      {/* フォーム作成モーダル */}
-      <div id="createFormModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
-          <h3 class="text-2xl font-bold mb-6">フォームを作成</h3>
-          <form id="createFormForm">
-            <div class="mb-4">
-              <label class="block text-gray-700 mb-2">フォームタイトル</label>
-              <input 
-                type="text" 
-                name="form_title" 
-                required
-                class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                placeholder="例: 見積もり依頼フォーム"
-              />
-            </div>
-            <div class="mb-6">
-              <label class="block text-gray-700 mb-2">説明文（任意）</label>
-              <textarea 
-                name="form_description"
-                rows="3"
-                class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                placeholder="フォームの説明を入力してください"
-              ></textarea>
-            </div>
-            <div class="flex gap-4">
-              <button 
-                type="submit"
-                class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
-              >
-                作成
-              </button>
-              <button 
-                type="button"
-                id="cancelCreateFormBtn"
-                class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-400 transition"
-              >
-                キャンセル
-              </button>
-            </div>
-          </form>
         </div>
       </div>
       
