@@ -582,14 +582,41 @@ templates.get('/:id/preview', async (c) => {
 
     console.log('File fetched, size:', file.size);
 
-    // ExcelJSでファイルを読み込み
+    // ファイルサイズが大きい場合は警告
+    if (file.size > 1000000) { // 1MB以上
+      console.warn('Large file detected:', file.size);
+    }
+
+    // ExcelJSでファイルを読み込み（タイムアウト対策）
     console.log('Loading Excel file...');
     const ExcelJS = await import('exceljs');
     const workbook = new ExcelJS.Workbook();
-    const buffer = await file.arrayBuffer();
     
+    // バッファを取得
+    const buffer = await file.arrayBuffer();
     console.log('Buffer size:', buffer.byteLength);
-    await workbook.xlsx.load(buffer);
+    
+    // Excel読み込み（タイムアウト対策: オプションを追加）
+    try {
+      await Promise.race([
+        workbook.xlsx.load(buffer),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Excel読み込みタイムアウト')), 8000) // 8秒でタイムアウト
+        )
+      ]);
+    } catch (error: any) {
+      if (error.message === 'Excel読み込みタイムアウト') {
+        console.error('Excel loading timeout');
+        return c.json({
+          success: false,
+          error: { 
+            code: 'TIMEOUT', 
+            message: 'ファイルの読み込みに時間がかかりすぎています。ファイルサイズを小さくするか、シンプルな形式で保存してください。'
+          }
+        }, 408);
+      }
+      throw error;
+    }
 
     console.log('Workbook loaded, sheets:', workbook.worksheets.length);
 
@@ -617,13 +644,13 @@ templates.get('/:id/preview', async (c) => {
       });
     }
 
-    // 実際に使用されている範囲を取得（制限を緩和: 200行×100列まで）
+    // 実際に使用されている範囲を取得（パフォーマンス重視: 100行×50列まで）
     const actualRows = worksheet.actualRowCount || worksheet.rowCount;
     const actualCols = worksheet.actualColumnCount || worksheet.columnCount;
-    const maxRows = Math.min(actualRows, 200);
-    const maxCols = Math.min(actualCols, 100);
+    const maxRows = Math.min(actualRows, 100); // 200 → 100に削減
+    const maxCols = Math.min(actualCols, 50);  // 100 → 50に削減
 
-    console.log('Processing cells:', { maxRows, maxCols });
+    console.log('Processing cells:', { actualRows, actualCols, maxRows, maxCols });
 
     // 列の幅を取得
     worksheet.columns.forEach((col: any, index: number) => {
