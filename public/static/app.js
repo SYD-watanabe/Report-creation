@@ -1088,7 +1088,16 @@ async function handleSaveAccount(e) {
 // 【プロトタイプ】Excelプレビューを読み込み（改善版：セル結合、スタイル、サイズ対応）
 async function loadExcelPreview(templateId) {
   try {
-    const { data } = await apiCall(`/api/templates/${templateId}/preview`)
+    const response = await apiCall(`/api/templates/${templateId}/preview`)
+    const data = response.data
+    
+    // レスポンスがJSONでない場合（HTMLエラーページが返された場合）
+    if (typeof data === 'string' && data.includes('<!DOCTYPE') || data.includes('<html')) {
+      console.error('Received HTML instead of JSON:', data.substring(0, 500))
+      document.getElementById('excelPreview').innerHTML = 
+        `<p class="text-red-500 text-center py-4">プレビューの読み込みに失敗しました<br><br>詳細: サーバーエラー（HTMLレスポンスを受信）<br>ローカルでビルド&デプロイを実行してください</p>`
+      return
+    }
     
     if (data.success) {
       const { cells, rowCount, colCount, merges, rowHeights, colWidths } = data.data
