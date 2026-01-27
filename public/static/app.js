@@ -454,7 +454,8 @@ async function initTemplateDetail() {
             body: JSON.stringify({
               field_name: field.field_name,
               cell_position: field.cell_position,
-              field_type: field.field_type || 'text',
+              field_type: 'input', // 'input', 'calc', 'fixed' のいずれか（デフォルトは 'input'）
+              data_type: field.field_type || 'text', // 'text', 'number', 'date'
               include_in_form: 1,
               display_order: index + 1
             })

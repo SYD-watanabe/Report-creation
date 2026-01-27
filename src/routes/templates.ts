@@ -691,7 +691,7 @@ templates.post('/:id/fields', async (c) => {
     const { env } = c;
     const templateId = c.req.param('id');
     const body = await c.req.json();
-    const { field_name, cell_position, field_type, include_in_form, display_order } = body;
+    const { field_name, cell_position, field_type, data_type, include_in_form, display_order } = body;
 
     console.log('Add field request:', { templateId, user: user.user_id, body });
 
@@ -726,13 +726,14 @@ templates.post('/:id/fields', async (c) => {
     // 新しいフィールドを追加
     const result = await env.DB.prepare(`
       INSERT INTO template_fields (
-        template_id, field_name, cell_position, field_type, include_in_form, display_order
-      ) VALUES (?, ?, ?, ?, ?, ?)
+        template_id, field_name, cell_position, field_type, data_type, include_in_form, display_order
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
     `).bind(
       templateId,
       field_name,
       cell_position,
-      field_type || 'text',
+      field_type || 'input', // 'input', 'calc', 'fixed'
+      data_type || 'text', // 'text', 'number', 'date'
       include_in_form !== undefined ? include_in_form : 1,
       display_order || 1
     ).run();
