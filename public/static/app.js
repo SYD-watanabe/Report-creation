@@ -212,6 +212,23 @@ async function initDashboard() {
   if (accountForm) {
     accountForm.addEventListener('submit', handleSaveAccount)
   }
+
+  // お問い合わせボタン
+  const contactBtn = document.getElementById('contactBtn')
+  const contactModal = document.getElementById('contactModal')
+  const closeContactBtn = document.getElementById('closeContactBtn')
+
+  if (contactBtn) {
+    contactBtn.addEventListener('click', () => {
+      contactModal.classList.remove('hidden')
+    })
+  }
+
+  if (closeContactBtn) {
+    closeContactBtn.addEventListener('click', () => {
+      contactModal.classList.add('hidden')
+    })
+  }
 }
 
 // テンプレート一覧を読み込み

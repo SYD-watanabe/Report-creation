@@ -178,6 +178,9 @@ app.get('/dashboard', (c) => {
             >
               プランアップグレード
             </a>
+            <button id="contactBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer">
+              <i class="fas fa-envelope mr-1"></i>お問い合わせ
+            </button>
             <button id="accountBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer">
               <i class="fas fa-user-circle mr-1"></i>アカウント情報
             </button>
@@ -300,6 +303,49 @@ app.get('/dashboard', (c) => {
               </button>
             </div>
           </form>
+        </div>
+      </div>
+
+      {/* お問い合わせモーダル */}
+      <div id="contactModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
+          <h3 class="text-2xl font-bold mb-6">お問い合わせ</h3>
+          
+          <div class="mb-6">
+            <h4 class="text-lg font-semibold mb-3 text-gray-800">会社概要</h4>
+            <div class="bg-gray-50 p-4 rounded-lg text-sm text-gray-700 space-y-2">
+              <p class="font-semibold">株式会社SYD　ネットPR事業部</p>
+              <p>東京都中央区日本橋小舟町9-4</p>
+              <p>日本橋小舟町ビル7F</p>
+              <p class="mt-3">
+                <i class="fas fa-phone mr-2"></i>
+                TEL：<a href="tel:03-6264-8977" class="text-blue-600 hover:underline">03-6264-8977</a> / 
+                <a href="tel:050-3160-7004" class="text-blue-600 hover:underline">050-3160-7004</a>
+              </p>
+              <p class="text-gray-600">（平日10:00～17:50）</p>
+            </div>
+          </div>
+
+          <div class="mb-6">
+            <h4 class="text-lg font-semibold mb-3 text-gray-800">フォームからお問い合わせ</h4>
+            <a 
+              href="https://www.netpr.biz/report-creation-form" 
+              target="_blank"
+              rel="noopener noreferrer"
+              class="block w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition text-center"
+            >
+              <i class="fas fa-external-link-alt mr-2"></i>
+              お問い合わせフォームを開く
+            </a>
+          </div>
+
+          <button 
+            type="button"
+            id="closeContactBtn"
+            class="w-full bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-400 transition"
+          >
+            閉じる
+          </button>
         </div>
       </div>
 
