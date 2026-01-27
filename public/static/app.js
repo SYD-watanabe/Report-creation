@@ -1206,22 +1206,12 @@ async function loadExcelPreview(templateId) {
       document.getElementById('excelPreview').innerHTML = html
     } else {
       document.getElementById('excelPreview').innerHTML = 
-        `<p class="text-red-500 text-center py-4">${data.error?.message || 'プレビューの読み込みに失敗しました'}</p>`
+        `<p class="text-red-500 text-center py-4">${data.error?.message || 'プレビューの読み込みに失敗しました'}<br><br>エラーコード: ${data.error?.code || 'UNKNOWN'}</p>`
     }
   } catch (error) {
     console.error('Load Excel preview error:', error)
     document.getElementById('excelPreview').innerHTML = 
-      '<p class="text-red-500 text-center py-4">プレビューの読み込みに失敗しました</p>'
-  }
-}
-    } else {
-      document.getElementById('excelPreview').innerHTML = 
-        `<p class="text-red-500 text-center py-4">${data.error?.message || 'プレビューの読み込みに失敗しました'}</p>`
-    }
-  } catch (error) {
-    console.error('Load Excel preview error:', error)
-    document.getElementById('excelPreview').innerHTML = 
-      '<p class="text-red-500 text-center py-4">プレビューの読み込みに失敗しました</p>'
+      `<p class="text-red-500 text-center py-4">プレビューの読み込みに失敗しました<br><br>詳細: ${error.message}</p>`
   }
 }
 
@@ -1435,7 +1425,4 @@ function showAddFieldManuallyDialog() {
   }
   
   updateFormPreview()
-}
-  
-  document.getElementById('formPreview').innerHTML = html
 }
