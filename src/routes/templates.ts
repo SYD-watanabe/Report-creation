@@ -582,16 +582,48 @@ templates.get('/:id/preview', async (c) => {
     // 最初のシートを取得
     const worksheet = workbook.worksheets[0];
     const cells: any[] = [];
+    const merges: any[] = [];
 
-    // セルデータを取得（最大20行×20列）
-    const maxRows = Math.min(worksheet.rowCount, 20);
-    const maxCols = 20;
+    // セル結合情報を取得
+    if (worksheet.model && worksheet.model.merges) {
+      worksheet.model.merges.forEach((merge: string) => {
+        merges.push(merge);
+      });
+    }
 
-    worksheet.eachRow((row, rowNumber) => {
+    // 実際に使用されている範囲を取得（最大100行×50列まで）
+    const actualRows = worksheet.actualRowCount || worksheet.rowCount;
+    const actualCols = worksheet.actualColumnCount || worksheet.columnCount;
+    const maxRows = Math.min(actualRows, 100);
+    const maxCols = Math.min(actualCols, 50);
+
+    // セルデータを取得
+    worksheet.eachRow({ includeEmpty: true }, (row, rowNumber) => {
       if (rowNumber > maxRows) return;
       
       row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
         if (colNumber > maxCols) return;
+
+        // セルのスタイル情報を取得
+        const style = cell.style || {};
+        const fill = style.fill;
+        const font = style.font;
+        const border = style.border;
+        const alignment = style.alignment;
+
+        // 背景色を取得
+        let bgColor = null;
+        if (fill && fill.type === 'pattern' && fill.fgColor) {
+          if (fill.fgColor.argb) {
+            bgColor = `#${fill.fgColor.argb.substring(2)}`;
+          }
+        }
+
+        // フォント色を取得
+        let fontColor = null;
+        if (font && font.color && font.color.argb) {
+          fontColor = `#${font.color.argb.substring(2)}`;
+        }
 
         cells.push({
           row: rowNumber,
@@ -599,7 +631,17 @@ templates.get('/:id/preview', async (c) => {
           address: cell.address,
           value: cell.value,
           formula: cell.formula || null,
-          type: cell.type
+          type: cell.type,
+          style: {
+            bgColor: bgColor,
+            fontColor: fontColor,
+            bold: font?.bold || false,
+            italic: font?.italic || false,
+            fontSize: font?.size || 11,
+            alignment: alignment?.horizontal || 'left',
+            verticalAlignment: alignment?.vertical || 'middle',
+            border: border || null
+          }
         });
       });
     });
@@ -610,7 +652,8 @@ templates.get('/:id/preview', async (c) => {
         sheetName: worksheet.name,
         rowCount: maxRows,
         colCount: maxCols,
-        cells: cells
+        cells: cells,
+        merges: merges
       }
     });
 

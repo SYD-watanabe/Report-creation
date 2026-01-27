@@ -1027,13 +1027,13 @@ async function handleSaveAccount(e) {
   }
 }
 
-// 【プロトタイプ】Excelプレビューを読み込み
+// 【プロトタイプ】Excelプレビューを読み込み（改善版：セル結合、スタイル対応）
 async function loadExcelPreview(templateId) {
   try {
     const { data } = await apiCall(`/api/templates/${templateId}/preview`)
     
     if (data.success) {
-      const { cells, rowCount, colCount } = data.data
+      const { cells, rowCount, colCount, merges } = data.data
       
       // セルデータをグリッド形式に変換
       const grid = []
@@ -1048,14 +1048,47 @@ async function loadExcelPreview(templateId) {
         grid[cell.row][cell.col] = cell
       })
       
+      // セル結合情報を解析
+      const mergedCells = new Map()
+      if (merges && merges.length > 0) {
+        merges.forEach(merge => {
+          // 例: "A1:C3" -> {startRow: 1, startCol: 1, endRow: 3, endCol: 3}
+          const [start, end] = merge.split(':')
+          const startMatch = start.match(/([A-Z]+)(\d+)/)
+          const endMatch = end.match(/([A-Z]+)(\d+)/)
+          
+          if (startMatch && endMatch) {
+            const startCol = colToNumber(startMatch[1])
+            const startRow = parseInt(startMatch[2])
+            const endCol = colToNumber(endMatch[1])
+            const endRow = parseInt(endMatch[2])
+            
+            const rowSpan = endRow - startRow + 1
+            const colSpan = endCol - startCol + 1
+            
+            // 開始セルに情報を保存
+            mergedCells.set(`${startRow}-${startCol}`, { rowSpan, colSpan })
+            
+            // 結合範囲内の他のセルは非表示フラグ
+            for (let r = startRow; r <= endRow; r++) {
+              for (let c = startCol; c <= endCol; c++) {
+                if (r !== startRow || c !== startCol) {
+                  mergedCells.set(`${r}-${c}`, { hidden: true })
+                }
+              }
+            }
+          }
+        })
+      }
+      
       // HTMLテーブルを生成
-      let html = '<table class="w-full border-collapse text-xs">'
+      let html = '<table class="w-full border-collapse text-xs" style="table-layout: fixed;">'
       
       // ヘッダー行（列番号 A, B, C...）
-      html += '<thead><tr><th class="border border-gray-300 bg-gray-100 px-2 py-1 w-12"></th>'
+      html += '<thead><tr><th class="border border-gray-300 bg-gray-100 px-2 py-1" style="width: 40px;"></th>'
       for (let c = 1; c <= colCount; c++) {
-        const colName = String.fromCharCode(64 + c) // A, B, C...
-        html += `<th class="border border-gray-300 bg-gray-100 px-2 py-1">${colName}</th>`
+        const colName = numberToCol(c)
+        html += `<th class="border border-gray-300 bg-gray-100 px-2 py-1" style="width: 80px;">${colName}</th>`
       }
       html += '</tr></thead><tbody>'
       
@@ -1063,20 +1096,117 @@ async function loadExcelPreview(templateId) {
       for (let r = 1; r <= rowCount; r++) {
         html += `<tr><td class="border border-gray-300 bg-gray-100 px-2 py-1 text-center font-semibold">${r}</td>`
         for (let c = 1; c <= colCount; c++) {
+          const mergeInfo = mergedCells.get(`${r}-${c}`)
+          
+          // 結合されたセルの内側は非表示
+          if (mergeInfo && mergeInfo.hidden) {
+            continue
+          }
+          
           const cell = grid[r][c]
           const value = cell && cell.value ? cell.value : ''
-          const formula = cell && cell.formula ? '(関数)' : ''
+          const formula = cell && cell.formula
           const address = cell ? cell.address : ''
+          const style = cell?.style || {}
           
-          html += `<td class="border border-gray-300 px-2 py-1 hover:bg-blue-50 cursor-pointer excel-cell" 
+          // セルのスタイルを構築
+          let cellStyle = 'border border-gray-300 px-2 py-1 hover:bg-blue-100 cursor-pointer excel-cell'
+          let inlineStyle = ''
+          
+          // 背景色
+          if (style.bgColor && style.bgColor !== '#FFFFFFFF' && style.bgColor !== '#FFFFFF') {
+            inlineStyle += `background-color: ${style.bgColor};`
+          }
+          
+          // フォント色
+          if (style.fontColor && style.fontColor !== '#000000') {
+            inlineStyle += `color: ${style.fontColor};`
+          }
+          
+          // フォントサイズ
+          if (style.fontSize) {
+            inlineStyle += `font-size: ${style.fontSize}px;`
+          }
+          
+          // 太字・イタリック
+          if (style.bold) {
+            cellStyle += ' font-bold'
+          }
+          if (style.italic) {
+            cellStyle += ' italic'
+          }
+          
+          // テキスト配置
+          if (style.alignment === 'center') {
+            cellStyle += ' text-center'
+          } else if (style.alignment === 'right') {
+            cellStyle += ' text-right'
+          }
+          
+          // 関数セルは薄いオレンジ色で表示
+          if (formula) {
+            cellStyle += ' bg-orange-100'
+          }
+          
+          // rowspan/colspan属性
+          const rowSpan = mergeInfo?.rowSpan || 1
+          const colSpan = mergeInfo?.colSpan || 1
+          const spanAttrs = `rowspan="${rowSpan}" colspan="${colSpan}"`
+          
+          html += `<td class="${cellStyle}" 
+                      ${spanAttrs}
+                      style="${inlineStyle}"
                       data-address="${address}" 
                       data-row="${r}" 
                       data-col="${c}"
-                      onclick="handleCellClick('${address}', ${r}, ${c})">`
-          html += `${value} ${formula}`
+                      data-has-formula="${formula ? 'true' : 'false'}"
+                      onclick="handleCellClick('${address}', ${r}, ${c}, ${formula ? 'true' : 'false'})">`
+          
+          // 値を表示（関数セルには警告アイコン）
+          if (formula) {
+            html += `<span title="数式: ${formula}">⚠️ ${value}</span>`
+          } else {
+            html += value
+          }
+          
           html += '</td>'
         }
         html += '</tr>'
+      }
+      
+      html += '</tbody></table>'
+      
+      document.getElementById('excelPreview').innerHTML = html
+    } else {
+      document.getElementById('excelPreview').innerHTML = 
+        `<p class="text-red-500 text-center py-4">${data.error?.message || 'プレビューの読み込みに失敗しました'}</p>`
+    }
+  } catch (error) {
+    console.error('Load Excel preview error:', error)
+    document.getElementById('excelPreview').innerHTML = 
+      '<p class="text-red-500 text-center py-4">プレビューの読み込みに失敗しました</p>'
+  }
+}
+
+// 列番号をアルファベットに変換（1 -> A, 27 -> AA）
+function numberToCol(num) {
+  let col = ''
+  while (num > 0) {
+    const rem = (num - 1) % 26
+    col = String.fromCharCode(65 + rem) + col
+    num = Math.floor((num - 1) / 26)
+  }
+  return col
+}
+
+// アルファベットを列番号に変換（A -> 1, AA -> 27）
+function colToNumber(col) {
+  let num = 0
+  for (let i = 0; i < col.length; i++) {
+    num = num * 26 + (col.charCodeAt(i) - 64)
+  }
+  return num
+}
       }
       html += '</tbody></table>'
       
@@ -1094,10 +1224,19 @@ async function loadExcelPreview(templateId) {
   }
 }
 
-// 【プロトタイプ】セルクリック処理
-function handleCellClick(address, row, col) {
-  console.log('セルクリック:', { address, row, col })
-  alert(`セル ${address} (行:${row}, 列:${col}) をクリックしました`)
+// 【プロトタイプ】セルクリック処理（関数セルの警告付き）
+function handleCellClick(address, row, col, hasFormula) {
+  console.log('セルクリック:', { address, row, col, hasFormula })
+  
+  if (hasFormula) {
+    const confirmed = confirm(`⚠️ セル ${address} には数式が入っています。\n\nこのセルを項目として追加すると、数式が失われる可能性があります。\n\n続けますか？`)
+    if (!confirmed) {
+      return
+    }
+  }
+  
+  // TODO: 項目追加機能を実装
+  alert(`セル ${address} (行:${row}, 列:${col}) をクリックしました\n\n次のステップで項目追加機能を実装します。`)
 }
 
 // 【プロトタイプ】フォームプレビューを更新
