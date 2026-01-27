@@ -565,18 +565,18 @@ app.get('/templates/:id', (c) => {
           </div>
         </div>
         
-        {/* プロトタイプ: 2カラムレイアウト */}
-        <div class="grid grid-cols-2 gap-6 mb-8">
-          {/* 左側: Excelプレビュー */}
-          <div class="bg-white rounded-xl shadow-lg p-6">
+        {/* プロトタイプ: 2カラムレイアウト（7:3比率） */}
+        <div class="grid grid-cols-10 gap-6 mb-8">
+          {/* 左側: Excelプレビュー（70%幅） */}
+          <div class="col-span-7 bg-white rounded-xl shadow-lg p-6">
             <h3 class="text-lg font-bold mb-4">📄 読み込んだExcel</h3>
             <div id="excelPreview" class="border rounded-lg overflow-auto" style="max-height: 600px;">
               <p class="text-gray-500 text-center py-8">読み込み中...</p>
             </div>
           </div>
           
-          {/* 右側: フォームプレビュー */}
-          <div class="bg-white rounded-xl shadow-lg p-6">
+          {/* 右側: フォームプレビュー（30%幅） */}
+          <div class="col-span-3 bg-white rounded-xl shadow-lg p-6">
             <h3 class="text-lg font-bold mb-4">📝 担当者入力フォーム プレビュー</h3>
             <div id="formPreview" class="border rounded-lg p-4 overflow-auto" style="max-height: 600px;">
               <p class="text-gray-500 text-center py-8">項目がありません</p>
