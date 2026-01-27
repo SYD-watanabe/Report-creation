@@ -1092,7 +1092,7 @@ async function loadExcelPreview(templateId) {
     const data = response.data
     
     // レスポンスがJSONでない場合（HTMLエラーページが返された場合）
-    if (typeof data === 'string' && data.includes('<!DOCTYPE') || data.includes('<html')) {
+    if (typeof data === 'string' && (data.includes('<!DOCTYPE') || data.includes('<html'))) {
       console.error('Received HTML instead of JSON:', data.substring(0, 500))
       document.getElementById('excelPreview').innerHTML = 
         `<p class="text-red-500 text-center py-4">プレビューの読み込みに失敗しました<br><br>詳細: サーバーエラー（HTMLレスポンスを受信）<br>ローカルでビルド&デプロイを実行してください</p>`
