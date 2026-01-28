@@ -1612,11 +1612,14 @@ function updateFormPreview() {
         <div class="flex justify-between items-start mb-2">
           <div class="flex-1">
             <div class="flex items-center mb-1">
-              <div class="font-semibold text-sm text-gray-800">
-                <i class="fas fa-edit mr-1 text-blue-500"></i>
+              <div class="text-base font-bold text-gray-800">
+                <i class="fas fa-edit mr-1 text-blue-500 cursor-pointer hover:text-blue-700" 
+                   onclick="focusFieldName(${field.temp_id})"
+                   title="クリックして編集"></i>
+                <span class="text-blue-600 text-xs mr-2">編集</span>
                 <span contenteditable="true" 
                       id="field-name-${field.temp_id}"
-                      class="hover:bg-yellow-50 px-1 rounded"
+                      class="hover:bg-yellow-50 px-1 rounded cursor-text"
                       onblur="updateFieldName(${field.temp_id}, this.textContent)">${escapeHtml(field.field_name)}</span>
               </div>
             </div>
@@ -1625,8 +1628,8 @@ function updateFormPreview() {
             </div>
             ${field.hasFormula ? '<div class="text-xs text-orange-600 mt-1"><i class="fas fa-exclamation-triangle mr-1"></i>数式セル</div>' : ''}
           </div>
-          <div class="flex items-center gap-2">
-            <div class="flex flex-col gap-1">
+          <div class="flex items-center gap-3">
+            <div class="flex flex-col items-center gap-1">
               <button 
                 onclick="moveFieldUp(${field.temp_id}); event.stopPropagation();"
                 class="text-gray-600 hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition ${isFirst ? 'opacity-30 cursor-not-allowed' : ''}"
@@ -1634,6 +1637,7 @@ function updateFormPreview() {
                 ${isFirst ? 'disabled' : ''}>
                 <i class="fas fa-chevron-up"></i>
               </button>
+              <span class="text-xs text-gray-600">移動</span>
               <button 
                 onclick="moveFieldDown(${field.temp_id}); event.stopPropagation();"
                 class="text-gray-600 hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition ${isLast ? 'opacity-30 cursor-not-allowed' : ''}"
@@ -1668,7 +1672,20 @@ function updateFieldName(tempId, newName) {
   }
 }
 
-// 手動で項目追加ダイアログ
+// 項目名にフォーカス（編集アイコンクリック時）
+function focusFieldName(tempId) {
+  const element = document.getElementById(`field-name-${tempId}`)
+  if (element) {
+    element.focus()
+    // テキストを全選択
+    const range = document.createRange()
+    range.selectNodeContents(element)
+    const selection = window.getSelection()
+    selection.removeAllRanges()
+    selection.addRange(range)
+  }
+}
+
 // 項目を上に移動
 function moveFieldUp(fieldId) {
   const index = AppState.formFields.findIndex(f => f.temp_id === fieldId)
