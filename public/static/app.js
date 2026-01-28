@@ -447,6 +447,14 @@ async function handleTemplateUpload(event) {
   const form = event.target
   const formData = new FormData(form)
   
+  // ファイル名からテンプレート名を自動生成
+  const fileInput = form.querySelector('input[type="file"]')
+  const file = fileInput.files[0]
+  if (file) {
+    const fileName = file.name.replace(/\.(xlsx|xls)$/i, '') // 拡張子を除去
+    formData.set('template_name', fileName)
+  }
+  
   try {
     const uploadBtn = form.querySelector('button[type="submit"]')
     uploadBtn.disabled = true

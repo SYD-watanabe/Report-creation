@@ -146,17 +146,22 @@ templates.post('/', async (c) => {
     // フォームデータを取得
     const formData = await c.req.formData();
     const file = formData.get('file') as File;
-    const templateName = formData.get('template_name') as string;
+    let templateName = formData.get('template_name') as string;
 
-    if (!file || !templateName) {
+    if (!file) {
       const response: ApiResponse = {
         success: false,
         error: {
           code: 'MISSING_FIELDS',
-          message: 'ファイルとテンプレート名は必須です'
+          message: 'ファイルは必須です'
         }
       };
       return c.json(response, 400);
+    }
+    
+    // テンプレート名が空の場合はファイル名から自動生成
+    if (!templateName || templateName.trim() === '') {
+      templateName = file.name.replace(/\.(xlsx|xls)$/i, '');
     }
 
     // ファイルサイズチェック（10MB）

@@ -334,10 +334,10 @@ app.get('/dashboard', (c) => {
             {/* テンプレート一覧がここに表示される */}
           </div>
           
-          {/* 新しいテンプレートを作成ボタン（中央配置、拡大） */}
+          {/* 新しいフォームを作成ボタン（中央配置、拡大） */}
           <div class="flex justify-center mt-6">
             <button id="uploadBtn" class="bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-700 transition shadow-md hover:shadow-lg">
-              <i class="fas fa-upload mr-2"></i>新しいテンプレートを作成
+              <i class="fas fa-upload mr-2"></i>新しいフォームを作成
             </button>
           </div>
         </div>
@@ -346,27 +346,20 @@ app.get('/dashboard', (c) => {
       {/* アップロードモーダル */}
       <div id="uploadModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
-          <h3 class="text-2xl font-bold mb-6">テンプレートアップロード</h3>
+          <h3 class="text-2xl font-bold mb-6">エクセルアップロード</h3>
           <form id="uploadForm" enctype="multipart/form-data">
-            <div class="mb-4">
-              <label class="block text-gray-700 mb-2">テンプレート名</label>
-              <input 
-                type="text" 
-                name="template_name" 
-                required
-                class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                placeholder="例: 見積書テンプレート"
-              />
-            </div>
             <div class="mb-6">
               <label class="block text-gray-700 mb-2">Excelファイル（.xlsx, .xls）</label>
-              <input 
-                type="file" 
-                name="file" 
-                accept=".xlsx,.xls"
-                required
-                class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
+              <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition">
+                <input 
+                  type="file" 
+                  name="file" 
+                  accept=".xlsx,.xls"
+                  required
+                  class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+                <p class="text-gray-600 mt-3">📎 ドラッグ＆ドロップ可</p>
+              </div>
               <p class="text-sm text-gray-500 mt-2">最大10MBまで</p>
             </div>
             <div class="flex gap-4">
