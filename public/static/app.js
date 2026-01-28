@@ -1603,20 +1603,15 @@ function updateFormPreview() {
   
   let html = '<div class="space-y-3">'
   fields.forEach((field, index) => {
+    const isFirst = index === 0
+    const isLast = index === fields.length - 1
+    
     html += `
-      <div class="border border-gray-300 rounded-lg p-3 bg-white hover:shadow-md transition cursor-move drag-item"
-           draggable="true"
-           data-field-id="${field.temp_id}"
-           ondragstart="handleDragStart(event, ${field.temp_id})"
-           ondragover="handleDragOver(event)"
-           ondragenter="handleDragEnter(event)"
-           ondragleave="handleDragLeave(event)"
-           ondrop="handleDrop(event, ${field.temp_id})"
-           ondragend="handleDragEnd(event)">
+      <div class="border border-gray-300 rounded-lg p-3 bg-white hover:shadow-md transition"
+           data-field-id="${field.temp_id}">
         <div class="flex justify-between items-start mb-2">
           <div class="flex-1">
             <div class="flex items-center mb-1">
-              <i class="fas fa-grip-vertical mr-2 text-gray-400" title="ドラッグして並び替え"></i>
               <div class="font-semibold text-sm text-gray-800">
                 <i class="fas fa-edit mr-1 text-blue-500"></i>
                 <span contenteditable="true" 
@@ -1630,15 +1625,30 @@ function updateFormPreview() {
             </div>
             ${field.hasFormula ? '<div class="text-xs text-orange-600 mt-1"><i class="fas fa-exclamation-triangle mr-1"></i>数式セル</div>' : ''}
           </div>
-          <button 
-            onclick="removeFieldFromForm(${field.temp_id}); event.stopPropagation();"
-            class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded transition"
-            title="削除">
-            <i class="fas fa-trash"></i>
-          </button>
-        </div>
-        <div class="text-xs text-gray-400 italic">
-          項目名をクリックして編集 / ドラッグして並び替え
+          <div class="flex items-center gap-2">
+            <div class="flex flex-col gap-1">
+              <button 
+                onclick="moveFieldUp(${field.temp_id}); event.stopPropagation();"
+                class="text-gray-600 hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition ${isFirst ? 'opacity-30 cursor-not-allowed' : ''}"
+                title="上に移動"
+                ${isFirst ? 'disabled' : ''}>
+                <i class="fas fa-chevron-up"></i>
+              </button>
+              <button 
+                onclick="moveFieldDown(${field.temp_id}); event.stopPropagation();"
+                class="text-gray-600 hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition ${isLast ? 'opacity-30 cursor-not-allowed' : ''}"
+                title="下に移動"
+                ${isLast ? 'disabled' : ''}>
+                <i class="fas fa-chevron-down"></i>
+              </button>
+            </div>
+            <button 
+              onclick="removeFieldFromForm(${field.temp_id}); event.stopPropagation();"
+              class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded transition"
+              title="削除">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
         </div>
       </div>
     `
@@ -1659,87 +1669,36 @@ function updateFieldName(tempId, newName) {
 }
 
 // 手動で項目追加ダイアログ
-// ドラッグ&ドロップ用の状態
-let draggedFieldId = null
-
-// ドラッグ開始
-function handleDragStart(event, fieldId) {
-  draggedFieldId = fieldId
-  event.target.style.opacity = '0.5'
-  event.dataTransfer.effectAllowed = 'move'
-  event.dataTransfer.setData('text/html', event.target.innerHTML)
-}
-
-// ドラッグオーバー
-function handleDragOver(event) {
-  if (event.preventDefault) {
-    event.preventDefault()
-  }
-  event.dataTransfer.dropEffect = 'move'
-  return false
-}
-
-// ドラッグエンター（項目に入った時）
-function handleDragEnter(event) {
-  event.preventDefault()
-  const target = event.currentTarget
-  if (target.getAttribute('draggable') === 'true' && draggedFieldId) {
-    const targetId = parseInt(target.getAttribute('data-field-id'))
-    if (draggedFieldId !== targetId) {
-      target.style.borderTop = '4px solid #3b82f6'
-      target.style.paddingTop = 'calc(0.75rem - 4px)' // p-3の調整
-    }
-  }
-}
-
-// ドラッグリーブ（項目から出た時）
-function handleDragLeave(event) {
-  const target = event.currentTarget
-  target.style.borderTop = ''
-  target.style.paddingTop = ''
-}
-
-// ドロップ
-function handleDrop(event, targetFieldId) {
-  if (event.stopPropagation) {
-    event.stopPropagation()
-  }
+// 項目を上に移動
+function moveFieldUp(fieldId) {
+  const index = AppState.formFields.findIndex(f => f.temp_id === fieldId)
   
-  const target = event.currentTarget
-  target.style.borderTop = ''
-  target.style.paddingTop = ''
-  
-  if (draggedFieldId === targetFieldId) {
-    return false
-  }
-  
-  // 配列内の項目を入れ替え
-  const draggedIndex = AppState.formFields.findIndex(f => f.temp_id === draggedFieldId)
-  const targetIndex = AppState.formFields.findIndex(f => f.temp_id === targetFieldId)
-  
-  if (draggedIndex !== -1 && targetIndex !== -1) {
-    const [draggedItem] = AppState.formFields.splice(draggedIndex, 1)
-    AppState.formFields.splice(targetIndex, 0, draggedItem)
+  if (index > 0) {
+    // 配列内の項目を入れ替え
+    const temp = AppState.formFields[index]
+    AppState.formFields[index] = AppState.formFields[index - 1]
+    AppState.formFields[index - 1] = temp
     
-    console.log('項目を並び替えました:', { draggedIndex, targetIndex })
+    console.log('項目を上に移動しました:', { fieldId, fromIndex: index, toIndex: index - 1 })
     
     // フォームプレビューを更新
     updateFormPreview()
   }
-  
-  return false
 }
 
-// ドラッグ終了
-// ドラッグ終了
-function handleDragEnd(event) {
-  event.target.style.opacity = '1'
+// 項目を下に移動
+function moveFieldDown(fieldId) {
+  const index = AppState.formFields.findIndex(f => f.temp_id === fieldId)
   
-  // すべての要素のボーダーとパディングをリセット
-  document.querySelectorAll('.drag-item').forEach(el => {
-    el.style.borderTop = ''
-    el.style.paddingTop = ''
-  })
-  
-  draggedFieldId = null
+  if (index < AppState.formFields.length - 1) {
+    // 配列内の項目を入れ替え
+    const temp = AppState.formFields[index]
+    AppState.formFields[index] = AppState.formFields[index + 1]
+    AppState.formFields[index + 1] = temp
+    
+    console.log('項目を下に移動しました:', { fieldId, fromIndex: index, toIndex: index + 1 })
+    
+    // フォームプレビューを更新
+    updateFormPreview()
+  }
 }
