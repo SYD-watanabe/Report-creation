@@ -1112,11 +1112,8 @@ function renderForms(forms, templateId) {
                 <i class="fas ${statusIcon} mr-1"></i>${statusText}
               </span>
             </div>
-            ${form.form_description ? `<p class="text-gray-600 mb-3">${escapeHtml(form.form_description)}</p>` : ''}
             <div class="text-sm text-gray-600 space-y-1">
               <p><i class="fas fa-link mr-2"></i>URL: <a href="${publicUrl}" target="_blank" class="text-blue-600 hover:underline">${publicUrl}</a></p>
-              <p><i class="fas fa-eye mr-2"></i>アクセス数: ${form.access_count}回</p>
-              <p><i class="fas fa-paper-plane mr-2"></i>送信数: ${form.submission_count}件</p>
               <p><i class="fas fa-clock mr-2"></i>作成日: ${formatDate(form.created_at)}</p>
             </div>
           </div>
