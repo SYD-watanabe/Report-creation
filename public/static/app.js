@@ -646,9 +646,8 @@ async function initTemplateDetail() {
         return
       }
       
-      // テンプレート情報を取得
-      const templateTitle = document.getElementById('templateTitle')?.textContent || 'テンプレート'
-      const formTitle = `${templateTitle}: ${formNameSuffix}`
+      // フォーム名はユーザー入力のみ
+      const formTitle = formNameSuffix
       
       // モーダルを閉じる
       formNameModal.classList.add('hidden')
