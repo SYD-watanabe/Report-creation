@@ -1609,24 +1609,26 @@ function updateFormPreview() {
     html += `
       <div class="border border-gray-300 rounded-lg p-3 bg-white hover:shadow-md transition"
            data-field-id="${field.temp_id}">
-        <div class="flex justify-between items-start mb-2">
+        <div class="flex justify-between items-start">
           <div class="flex-1">
-            <div class="flex items-center mb-1">
-              <div class="text-base font-bold text-gray-800">
+            <div class="mb-2">
+              <div class="flex items-center mb-2">
                 <i class="fas fa-edit mr-1 text-blue-500 cursor-pointer hover:text-blue-700" 
                    onclick="focusFieldName(${field.temp_id})"
                    title="クリックして編集"></i>
-                <span class="text-blue-600 text-xs mr-2">編集</span>
+                <span class="text-blue-600 text-xs">編集</span>
+              </div>
+              <div class="text-base font-bold text-gray-800 mb-2">
                 <span contenteditable="true" 
                       id="field-name-${field.temp_id}"
                       class="hover:bg-yellow-50 px-1 rounded cursor-text"
                       onblur="updateFieldName(${field.temp_id}, this.textContent)">${escapeHtml(field.field_name)}</span>
               </div>
+              <div class="text-xs text-gray-500">
+                <i class="fas fa-table mr-1"></i>セル: <span class="font-mono font-semibold">${escapeHtml(field.cell_position)}</span>
+              </div>
+              ${field.hasFormula ? '<div class="text-xs text-orange-600 mt-1"><i class="fas fa-exclamation-triangle mr-1"></i>数式セル</div>' : ''}
             </div>
-            <div class="text-xs text-gray-500">
-              <i class="fas fa-table mr-1"></i>セル: <span class="font-mono font-semibold">${escapeHtml(field.cell_position)}</span>
-            </div>
-            ${field.hasFormula ? '<div class="text-xs text-orange-600 mt-1"><i class="fas fa-exclamation-triangle mr-1"></i>数式セル</div>' : ''}
           </div>
           <div class="flex items-center gap-3">
             <div class="flex flex-col items-center gap-1">
