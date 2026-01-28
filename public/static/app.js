@@ -1616,7 +1616,7 @@ function updateFormPreview() {
                 <i class="fas fa-edit mr-1 text-blue-500 cursor-pointer hover:text-blue-700" 
                    onclick="focusFieldName(${field.temp_id})"
                    title="クリックして編集"></i>
-                <span class="text-blue-600 text-xs">編集</span>
+                <span class="text-blue-600 text-xs">項目名編集</span>
               </div>
               <div class="text-base font-bold text-gray-800 mb-2">
                 <span contenteditable="true" 
