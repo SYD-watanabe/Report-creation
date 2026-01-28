@@ -796,7 +796,10 @@ app.get('/templates/:id/forms', (c) => {
         
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
           <div class="mb-6">
-            <h3 class="text-lg font-bold">フォーム一覧</h3>
+            <div class="flex items-center gap-3">
+              <h3 class="text-lg font-bold">フォーム一覧</h3>
+              <span class="text-sm text-gray-600">URLをコピーして担当者様に送りましょう</span>
+            </div>
           </div>
           <div id="formsList">
             <p class="text-gray-500 text-center py-8">読み込み中...</p>
