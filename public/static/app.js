@@ -1098,26 +1098,20 @@ function renderForms(forms, templateId) {
   
   formsList.innerHTML = forms.map(form => {
     const publicUrl = `${window.location.origin}/forms/${form.form_url}`
-    const statusColor = form.is_active ? 'text-green-600' : 'text-gray-400'
+    const statusColor = form.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
     const statusIcon = form.is_active ? 'fa-check-circle' : 'fa-times-circle'
-    const statusText = form.is_active ? '公開中' : '非公開'
+    const statusText = form.is_active ? '公開' : '非公開'
     
     return `
       <div class="border rounded-lg p-4 mb-4 hover:shadow-md transition">
-        <div class="flex justify-between items-start">
-          <div class="flex-1">
-            <div class="flex items-center gap-2 mb-2">
-              <h4 class="font-bold text-lg">${escapeHtml(form.form_title)}</h4>
-              <span class="${statusColor}">
-                <i class="fas ${statusIcon} mr-1"></i>${statusText}
-              </span>
-            </div>
-            <div class="text-sm text-gray-600 space-y-1">
-              <p><i class="fas fa-link mr-2"></i>URL: <a href="${publicUrl}" target="_blank" class="text-blue-600 hover:underline">${publicUrl}</a></p>
-              <p><i class="fas fa-clock mr-2"></i>作成日: ${formatDate(form.created_at)}</p>
-            </div>
+        <div class="flex justify-between items-center mb-3">
+          <div class="flex items-center gap-3">
+            <span class="${statusColor} px-3 py-1 rounded-full text-sm font-semibold">
+              <i class="fas ${statusIcon} mr-1"></i>${statusText}
+            </span>
+            <h4 class="font-bold text-lg">${escapeHtml(form.form_title)}</h4>
           </div>
-          <div class="flex flex-col gap-2 ml-4">
+          <div class="flex gap-2">
             <button 
               onclick="copyFormUrl('${publicUrl}')"
               class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm whitespace-nowrap"
@@ -1137,6 +1131,10 @@ function renderForms(forms, templateId) {
               <i class="fas fa-trash"></i> 削除
             </button>
           </div>
+        </div>
+        <div class="text-sm text-gray-600 space-y-1">
+          <p><i class="fas fa-link mr-2"></i>URL: <a href="${publicUrl}" target="_blank" class="text-blue-600 hover:underline">${publicUrl}</a></p>
+          <p><i class="fas fa-clock mr-2"></i>作成日: ${formatDate(form.created_at)}</p>
         </div>
       </div>
     `
@@ -1203,12 +1201,6 @@ function copyFormUrl(url) {
 
 // フォーム状態を切り替え
 async function toggleFormStatus(formId, isActive, templateId) {
-  const action = isActive ? '公開' : '非公開'
-  
-  if (!confirm(`フォームを${action}にしますか？`)) {
-    return
-  }
-  
   try {
     const { data } = await apiCall(`/api/forms/${formId}`, {
       method: 'PATCH',
@@ -1216,7 +1208,6 @@ async function toggleFormStatus(formId, isActive, templateId) {
     })
     
     if (data.success) {
-      alert(`フォームを${action}にしました`)
       await loadForms(templateId)
     } else {
       alert(data.error.message || '更新に失敗しました')
