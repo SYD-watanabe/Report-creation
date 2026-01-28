@@ -72,8 +72,8 @@ function renderQuotes(quotes) {
               </span>
             </div>
             <div class="text-sm text-gray-600 space-y-1 mb-3">
-              <p><i class="fas fa-wpforms mr-2"></i>フォーム: ${escapeHtml(quote.form_title)}</p>
-              <p><i class="fas fa-clock mr-2"></i>作成日: ${formatDate(quote.created_at)}</p>
+              <p>フォーム: ${escapeHtml(quote.form_title)}</p>
+              <p>作成日: ${formatDate(quote.created_at)}</p>
             </div>
             <div class="bg-gray-50 p-3 rounded-lg">
               <p class="text-xs text-gray-500 mb-1">入力データ（抜粋）:</p>
@@ -84,7 +84,7 @@ function renderQuotes(quotes) {
                 `<p class="text-xs text-gray-500 mt-1">他 ${Object.keys(inputData).length - 3} 項目...</p>` : ''}
             </div>
           </div>
-          <div class="flex flex-col gap-2 ml-4">
+          <div class="flex flex-row gap-2 ml-4">
             <button 
               onclick="viewQuoteDetail(${quote.quote_id})"
               class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm whitespace-nowrap"
