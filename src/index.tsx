@@ -796,9 +796,9 @@ app.get('/templates/:id/forms', (c) => {
         
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
           <div class="mb-6">
-            <div class="flex items-center gap-3">
-              <h3 class="text-lg font-bold">フォーム一覧</h3>
-              <span class="text-sm text-gray-600">URLをコピーして担当者様に送りましょう</span>
+            <h3 class="text-lg font-bold mb-4">フォーム一覧</h3>
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+              <p class="text-base font-semibold text-blue-800">📌 URLをコピーして担当者様に送りましょう</p>
             </div>
           </div>
           <div id="formsList">
