@@ -1604,11 +1604,13 @@ function updateFormPreview() {
   let html = '<div class="space-y-3">'
   fields.forEach((field, index) => {
     html += `
-      <div class="border border-gray-300 rounded-lg p-3 bg-white hover:shadow-md transition cursor-move"
+      <div class="border border-gray-300 rounded-lg p-3 bg-white hover:shadow-md transition cursor-move drag-item"
            draggable="true"
            data-field-id="${field.temp_id}"
            ondragstart="handleDragStart(event, ${field.temp_id})"
            ondragover="handleDragOver(event)"
+           ondragenter="handleDragEnter(event)"
+           ondragleave="handleDragLeave(event)"
            ondrop="handleDrop(event, ${field.temp_id})"
            ondragend="handleDragEnd(event)">
         <div class="flex justify-between items-start mb-2">
@@ -1642,16 +1644,6 @@ function updateFormPreview() {
     `
   })
   
-  // 手動で項目追加ボタン
-  html += `
-    <button 
-      onclick="showAddFieldManuallyDialog()"
-      class="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-gray-500 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition">
-      <i class="fas fa-plus-circle mr-2"></i>
-      手動で項目を追加
-    </button>
-  `
-  
   html += '</div>'
   
   document.getElementById('formPreview').innerHTML = html
@@ -1667,51 +1659,6 @@ function updateFieldName(tempId, newName) {
 }
 
 // 手動で項目追加ダイアログ
-function showAddFieldManuallyDialog() {
-  const fieldName = prompt('項目名を入力してください:')
-  if (!fieldName || fieldName.trim() === '') {
-    return
-  }
-  
-  const address = prompt('セル位置を入力してください（例: A1, B5）:', 'A1')
-  if (!address || address.trim() === '') {
-    return
-  }
-  
-  // セルアドレスのバリデーション
-  const addressPattern = /^[A-Z]+\d+$/
-  if (!addressPattern.test(address.toUpperCase())) {
-    alert('セル位置が不正です。例: A1, B5, AA10')
-    return
-  }
-  
-  // 既に追加済みかチェック
-  const existingField = AppState.formFields?.find(f => f.cell_position === address.toUpperCase())
-  if (existingField) {
-    alert(`セル ${address} は既に項目として追加されています。`)
-    return
-  }
-  
-  // 項目を追加
-  addFieldToForm({
-    field_name: fieldName.trim(),
-    cell_position: address.toUpperCase(),
-    field_type: 'text',
-    row: null,
-    col: null,
-    hasFormula: false
-  })
-  
-  // セルの色を変更
-  const cellElement = document.querySelector(`[data-address="${address.toUpperCase()}"]`)
-  if (cellElement) {
-    cellElement.classList.add('bg-red-100')
-    cellElement.classList.remove('hover:bg-blue-100')
-  }
-  
-  updateFormPreview()
-}
-
 // ドラッグ&ドロップ用の状態
 let draggedFieldId = null
 
@@ -1729,14 +1676,27 @@ function handleDragOver(event) {
     event.preventDefault()
   }
   event.dataTransfer.dropEffect = 'move'
-  
-  // ドラッグ中の視覚的フィードバック
-  const target = event.currentTarget
-  if (target.getAttribute('draggable') === 'true') {
-    target.style.borderTop = '3px solid #3b82f6'
-  }
-  
   return false
+}
+
+// ドラッグエンター（項目に入った時）
+function handleDragEnter(event) {
+  event.preventDefault()
+  const target = event.currentTarget
+  if (target.getAttribute('draggable') === 'true' && draggedFieldId) {
+    const targetId = parseInt(target.getAttribute('data-field-id'))
+    if (draggedFieldId !== targetId) {
+      target.style.borderTop = '4px solid #3b82f6'
+      target.style.paddingTop = 'calc(0.75rem - 4px)' // p-3の調整
+    }
+  }
+}
+
+// ドラッグリーブ（項目から出た時）
+function handleDragLeave(event) {
+  const target = event.currentTarget
+  target.style.borderTop = ''
+  target.style.paddingTop = ''
 }
 
 // ドロップ
@@ -1745,7 +1705,9 @@ function handleDrop(event, targetFieldId) {
     event.stopPropagation()
   }
   
-  event.currentTarget.style.borderTop = ''
+  const target = event.currentTarget
+  target.style.borderTop = ''
+  target.style.paddingTop = ''
   
   if (draggedFieldId === targetFieldId) {
     return false
@@ -1769,12 +1731,14 @@ function handleDrop(event, targetFieldId) {
 }
 
 // ドラッグ終了
+// ドラッグ終了
 function handleDragEnd(event) {
   event.target.style.opacity = '1'
   
-  // すべての要素のボーダーをリセット
-  document.querySelectorAll('[draggable="true"]').forEach(el => {
+  // すべての要素のボーダーとパディングをリセット
+  document.querySelectorAll('.drag-item').forEach(el => {
     el.style.borderTop = ''
+    el.style.paddingTop = ''
   })
   
   draggedFieldId = null
