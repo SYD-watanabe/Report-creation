@@ -5,6 +5,15 @@ import { extractFieldsWithGemini, convertToDbFields } from '../utils/gemini';
 
 const templates = new Hono<{ Bindings: Bindings }>();
 
+// UTC時刻を日本時間（JST）に変換
+function toJST(utcDateString: string): string {
+  const date = new Date(utcDateString);
+  // 日本時間は UTC+9
+  const jstOffset = 9 * 60 * 60 * 1000;
+  const jstDate = new Date(date.getTime() + jstOffset);
+  return jstDate.toISOString().replace('T', ' ').substring(0, 19);
+}
+
 // テンプレート一覧取得
 templates.get('/', async (c) => {
   try {
@@ -26,10 +35,17 @@ templates.get('/', async (c) => {
       ORDER BY created_at DESC
     `).bind(user.user_id).all();
 
+    // created_atを日本時間に変換
+    const templatesWithJST = result.results?.map((template: any) => ({
+      ...template,
+      created_at: toJST(template.created_at),
+      updated_at: template.updated_at ? toJST(template.updated_at) : null
+    }));
+
     const response: ApiResponse<{ templates: Template[] }> = {
       success: true,
       data: {
-        templates: result.results as Template[]
+        templates: templatesWithJST as Template[]
       }
     };
 

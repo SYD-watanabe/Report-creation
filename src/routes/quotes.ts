@@ -4,6 +4,15 @@ import ExcelJS from 'exceljs';
 
 const quotes = new Hono<{ Bindings: Bindings }>();
 
+// UTC時刻を日本時間（JST）に変換
+function toJST(utcDateString: string): string {
+  const date = new Date(utcDateString);
+  // 日本時間は UTC+9
+  const jstOffset = 9 * 60 * 60 * 1000;
+  const jstDate = new Date(date.getTime() + jstOffset);
+  return jstDate.toISOString().replace('T', ' ').substring(0, 19);
+}
+
 // 見積書一覧取得（認証必要）
 quotes.get('/', async (c) => {
   try {
@@ -29,10 +38,16 @@ quotes.get('/', async (c) => {
       ORDER BY q.created_at DESC
     `).bind(user.user_id).all();
 
+    // created_atを日本時間に変換
+    const quotesWithJST = result.results?.map((quote: any) => ({
+      ...quote,
+      created_at: toJST(quote.created_at)
+    }));
+
     const response: ApiResponse = {
       success: true,
       data: {
-        quotes: result.results
+        quotes: quotesWithJST
       }
     };
 
@@ -87,10 +102,16 @@ quotes.get('/:id', async (c) => {
       return c.json(response, 404);
     }
 
+    // created_atを日本時間に変換
+    const quoteWithJST = {
+      ...quote,
+      created_at: toJST(quote.created_at as string)
+    };
+
     const response: ApiResponse = {
       success: true,
       data: {
-        quote
+        quote: quoteWithJST
       }
     };
 

@@ -3,6 +3,15 @@ import { Bindings, ApiResponse } from '../types';
 
 const forms = new Hono<{ Bindings: Bindings }>();
 
+// UTC時刻を日本時間（JST）に変換
+function toJST(utcDateString: string): string {
+  const date = new Date(utcDateString);
+  // 日本時間は UTC+9
+  const jstOffset = 9 * 60 * 60 * 1000;
+  const jstDate = new Date(date.getTime() + jstOffset);
+  return jstDate.toISOString().replace('T', ' ').substring(0, 19);
+}
+
 // フォーム生成（認証必要）
 forms.post('/', async (c) => {
   try {
@@ -128,10 +137,17 @@ forms.get('/template/:templateId', async (c) => {
       ORDER BY created_at DESC
     `).bind(templateId).all();
 
+    // created_atを日本時間に変換
+    const formsWithJST = result.results?.map((form: any) => ({
+      ...form,
+      created_at: toJST(form.created_at),
+      updated_at: form.updated_at ? toJST(form.updated_at) : null
+    }));
+
     const response: ApiResponse = {
       success: true,
       data: {
-        forms: result.results
+        forms: formsWithJST
       }
     };
 
