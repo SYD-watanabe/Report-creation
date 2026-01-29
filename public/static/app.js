@@ -311,6 +311,14 @@ function initCommon() {
       contactModal.classList.add('hidden')
     })
   }
+  
+  // プランアップグレードボタン
+  const upgradeBtn = document.getElementById('upgradeBtn')
+  if (upgradeBtn) {
+    upgradeBtn.addEventListener('click', () => {
+      alert('プランアップグレード機能は準備中です。\n\nお問い合わせフォームからご連絡ください。')
+    })
+  }
 }
 
 // ダッシュボード初期化

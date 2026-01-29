@@ -63,12 +63,12 @@ const Header = () => (
         <a href="/dashboard" class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent hover:opacity-80 transition cursor-pointer">
           🏠 エクセルまもる君
         </a>
-        <div class="flex gap-4 items-center">
-          <button id="settingsToggleBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer px-4 py-2 border rounded-lg hover:bg-gray-50 transition">
-            ⚙️ 設定 ▼
+        <div class="flex gap-3 items-center">
+          <button id="upgradeBtn" class="px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold rounded-lg hover:from-yellow-600 hover:to-orange-600 transition shadow-md hover:shadow-lg">
+            ⭐ プランアップグレード
           </button>
-          <button id="logoutBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer">
-            ログアウト
+          <button id="settingsToggleBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer px-4 py-2 border rounded-lg hover:bg-gray-50 transition">
+            📋 メニュー ▼
           </button>
         </div>
       </div>
@@ -95,7 +95,7 @@ const Header = () => (
       </div>
     </div>
     
-    {/* 設定メニュー（折りたたみ） */}
+    {/* メニュー（折りたたみ） */}
     <div id="settingsDropdown" class="hidden bg-gray-50 border-t shadow-lg">
       <div class="max-w-7xl mx-auto px-4 py-4">
         <ul class="space-y-2">
@@ -107,6 +107,11 @@ const Header = () => (
           <li>
             <button id="accountBtn" class="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition text-left">
               👤 アカウント情報
+            </button>
+          </li>
+          <li>
+            <button id="logoutBtn" class="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition text-left">
+              🚪 ログアウト
             </button>
           </li>
         </ul>
