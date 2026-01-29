@@ -169,20 +169,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 共通初期化処理（全ページで実行）
 function initCommon() {
-  // メニュートグルボタン
-  const menuToggleBtn = document.getElementById('menuToggleBtn')
-  const dropdownMenu = document.getElementById('dropdownMenu')
+  // 設定メニュートグルボタン
+  const settingsToggleBtn = document.getElementById('settingsToggleBtn')
+  const settingsDropdown = document.getElementById('settingsDropdown')
   
-  if (menuToggleBtn && dropdownMenu) {
-    menuToggleBtn.addEventListener('click', (e) => {
+  if (settingsToggleBtn && settingsDropdown) {
+    settingsToggleBtn.addEventListener('click', (e) => {
       e.stopPropagation()
-      dropdownMenu.classList.toggle('hidden')
+      settingsDropdown.classList.toggle('hidden')
     })
     
     // メニュー外をクリックしたら閉じる
     document.addEventListener('click', (e) => {
-      if (!menuToggleBtn.contains(e.target) && !dropdownMenu.contains(e.target)) {
-        dropdownMenu.classList.add('hidden')
+      if (!settingsToggleBtn.contains(e.target) && !settingsDropdown.contains(e.target)) {
+        settingsDropdown.classList.add('hidden')
       }
     })
   }

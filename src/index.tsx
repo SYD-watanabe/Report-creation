@@ -58,24 +58,24 @@ app.use(renderer)
 // 共通ヘッダーコンポーネント
 const Header = () => (
   <nav class="bg-white shadow-md">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-      <a href="/dashboard" class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent hover:opacity-80 transition cursor-pointer">
-        🏠 エクセルまもる君
-      </a>
-      <div class="flex gap-4 items-center">
-        <button id="menuToggleBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer px-4 py-2 border rounded-lg hover:bg-gray-50 transition">
-          ≡ メニュー ▼
-        </button>
-        <button id="logoutBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer">
-          ログアウト
-        </button>
+    <div class="max-w-7xl mx-auto px-4 py-4">
+      <div class="flex justify-between items-center mb-4">
+        <a href="/dashboard" class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent hover:opacity-80 transition cursor-pointer">
+          🏠 エクセルまもる君
+        </a>
+        <div class="flex gap-4 items-center">
+          <button id="settingsToggleBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer px-4 py-2 border rounded-lg hover:bg-gray-50 transition">
+            ⚙️ 設定 ▼
+          </button>
+          <button id="logoutBtn" class="text-gray-600 hover:text-gray-800 cursor-pointer">
+            ログアウト
+          </button>
+        </div>
       </div>
-    </div>
-    
-    {/* 折りたたみメニュー */}
-    <div id="dropdownMenu" class="hidden bg-white border-t shadow-lg">
-      <div class="max-w-7xl mx-auto px-4 py-4">
-        <ul class="space-y-2">
+      
+      {/* メインメニュー（常に表示） */}
+      <div class="border-t pt-4">
+        <ul class="flex gap-4 flex-wrap">
           <li>
             <a href="/dashboard" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition">
               ➕ 新規フォーム作成
@@ -87,10 +87,18 @@ const Header = () => (
             </a>
           </li>
           <li>
-            <button id="formsMenuBtn" class="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition text-left">
+            <button id="formsMenuBtn" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition">
               📝 フォーム管理
             </button>
           </li>
+        </ul>
+      </div>
+    </div>
+    
+    {/* 設定メニュー（折りたたみ） */}
+    <div id="settingsDropdown" class="hidden bg-gray-50 border-t shadow-lg">
+      <div class="max-w-7xl mx-auto px-4 py-4">
+        <ul class="space-y-2">
           <li>
             <button id="contactBtn" class="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition text-left">
               📧 お問い合わせ
