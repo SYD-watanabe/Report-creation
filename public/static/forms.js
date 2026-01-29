@@ -54,19 +54,35 @@ function renderPublicForm(form, fields) {
     </div>
     
     <form id="publicForm" class="space-y-6">
-      <!-- 案件名入力欄 -->
-      <div class="mb-6">
-        <label class="block text-sm font-semibold text-gray-700 mb-2">
-          案件名 <span class="text-red-600">*</span>
-        </label>
+      <!-- 案件名入力欄（見積書には反映されない） -->
+      <div class="mb-8 p-5 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg">
+        <div class="flex items-start mb-2">
+          <i class="fas fa-info-circle text-yellow-600 mt-1 mr-2"></i>
+          <label class="block text-sm font-semibold text-gray-800">
+            案件名 <span class="text-red-600">*</span>
+            <span class="ml-2 text-xs font-normal text-yellow-700 bg-yellow-200 px-2 py-1 rounded">管理用</span>
+          </label>
+        </div>
         <input 
           type="text" 
           name="_project_name"
           required
-          class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+          class="w-full px-4 py-3 border-2 border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white"
           placeholder="例：株式会社SYD"
         />
-        <p class="text-sm text-gray-500 mt-1">受信した事務担当者様がわかるように社名等を入力してください</p>
+        <p class="text-sm text-yellow-800 mt-2 flex items-start">
+          <i class="fas fa-exclamation-triangle text-yellow-600 mt-0.5 mr-2 flex-shrink-0"></i>
+          <span>受信した事務担当者様がわかるように案件名等を入力してください。見積書には反映されません</span>
+        </p>
+      </div>
+      
+      <!-- 見積書に反映される入力項目 -->
+      <div class="mb-4 pb-3 border-b-2 border-blue-200">
+        <h3 class="text-lg font-bold text-blue-800 flex items-center">
+          <i class="fas fa-file-invoice text-blue-600 mr-2"></i>
+          見積書入力項目
+        </h3>
+        <p class="text-sm text-gray-600 mt-1">以下の項目は見積書に反映されます</p>
       </div>
       
       ${inputFields.map(field => renderFormField(field)).join('')}
