@@ -340,13 +340,9 @@ app.get('/dashboard', (c) => {
           </a>
         </div>
         
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <div id="templatesList">
-            {/* テンプレート一覧がここに表示される */}
-          </div>
-          
+        <div class="bg-white rounded-xl shadow-lg p-6">
           {/* 新しいフォームを作成ボタン（中央配置、拡大） */}
-          <div class="flex justify-center mt-6">
+          <div class="flex justify-center">
             <button id="uploadBtn" class="bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-700 transition shadow-md hover:shadow-lg">
               <i class="fas fa-upload mr-2"></i>新しいフォームを作成
             </button>

@@ -329,9 +329,6 @@ async function initDashboard() {
   // プラン情報を表示
   updatePlanStatus()
   
-  // テンプレート一覧を読み込み
-  await loadTemplates()
-  
   // アップロードボタン
   const uploadBtn = document.getElementById('uploadBtn')
   const uploadModal = document.getElementById('uploadModal')
@@ -519,15 +516,7 @@ async function deleteTemplate(templateId, templateName) {
     const data = response.data
     
     if (data.success) {
-      console.log('削除成功、テンプレート一覧を再読み込み')
-      
-      // テンプレート一覧を再読み込み
-      try {
-        await loadTemplates()
-        console.log('テンプレート一覧の再読み込み完了')
-      } catch (loadError) {
-        console.error('テンプレート一覧の再読み込みエラー（無視）:', loadError)
-      }
+      console.log('削除成功')
       
       // ユーザー情報を更新
       try {
