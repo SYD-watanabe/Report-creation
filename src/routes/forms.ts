@@ -103,6 +103,62 @@ forms.post('/', async (c) => {
   }
 });
 
+// 全フォーム一覧取得（認証必要）
+forms.get('/all', async (c) => {
+  try {
+    const user = c.get('user');
+    const { env } = c;
+
+    console.log('全フォーム一覧取得リクエスト:', user.user_id);
+
+    // ユーザーの全フォームを取得（テンプレート名も含む）
+    const formsResult = await env.DB.prepare(`
+      SELECT 
+        f.form_id,
+        f.form_url,
+        f.form_title,
+        f.form_description,
+        f.is_active,
+        f.access_count,
+        f.submission_count,
+        f.created_at,
+        f.updated_at,
+        f.template_id,
+        t.template_name
+      FROM forms f
+      LEFT JOIN templates t ON f.template_id = t.template_id
+      WHERE f.user_id = ?
+      ORDER BY f.created_at DESC
+    `).bind(user.user_id).all();
+
+    console.log('取得したフォーム数:', formsResult.results?.length || 0);
+
+    // 日本時間に変換
+    const forms = formsResult.results.map((form: any) => ({
+      ...form,
+      created_at: toJST(form.created_at),
+      updated_at: form.updated_at ? toJST(form.updated_at) : null
+    }));
+
+    const response: ApiResponse = {
+      success: true,
+      data: { forms }
+    };
+
+    return c.json(response);
+  } catch (error: any) {
+    console.error('全フォーム一覧取得エラー:', error);
+    const response: ApiResponse = {
+      success: false,
+      error: {
+        code: 'SERVER_ERROR',
+        message: `フォーム一覧の取得に失敗しました: ${error.message || '不明なエラー'}`
+      }
+    };
+    return c.json(response, 500);
+  }
+});
+
 // テンプレートのフォーム一覧取得（認証必要）
 forms.get('/template/:templateId', async (c) => {
   try {
