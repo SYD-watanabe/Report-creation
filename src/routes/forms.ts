@@ -291,6 +291,63 @@ forms.post('/:formUrl/submit', async (c) => {
       return c.json(response, 403);
     }
 
+    // サブスクリプション情報とプラン制限を取得
+    const subscription = await env.DB.prepare(`
+      SELECT form_submission_limit, quote_storage_limit
+      FROM user_subscriptions
+      WHERE user_id = ? AND payment_status = 'active'
+    `).bind(form.user_id).first();
+
+    if (!subscription) {
+      const response: ApiResponse = {
+        success: false,
+        error: {
+          code: 'NO_SUBSCRIPTION',
+          message: 'アクティブなサブスクリプションがありません'
+        }
+      };
+      return c.json(response, 403);
+    }
+
+    // フォーム送信回数制限チェック（-1は無制限）
+    const formSubmissionLimit = subscription.form_submission_limit as number;
+    if (formSubmissionLimit !== -1) {
+      // このフォームの送信回数を取得
+      const submissionCount = await env.DB.prepare(`
+        SELECT submission_count FROM forms WHERE form_id = ?
+      `).bind(form.form_id).first();
+
+      if (submissionCount && (submissionCount.submission_count as number) >= formSubmissionLimit) {
+        const response: ApiResponse = {
+          success: false,
+          error: {
+            code: 'SUBMISSION_LIMIT_REACHED',
+            message: `フォーム送信回数の上限（${formSubmissionLimit}回）に達しています。プレミアムプランにアップグレードしてください。`
+          }
+        };
+        return c.json(response, 403);
+      }
+    }
+
+    // 見積書保存件数制限チェック（-1は無制限）
+    const quoteStorageLimit = subscription.quote_storage_limit as number;
+    if (quoteStorageLimit !== -1) {
+      const quoteCount = await env.DB.prepare(`
+        SELECT COUNT(*) as count FROM quotes WHERE user_id = ?
+      `).bind(form.user_id).first();
+
+      if (quoteCount && (quoteCount.count as number) >= quoteStorageLimit) {
+        const response: ApiResponse = {
+          success: false,
+          error: {
+            code: 'QUOTE_LIMIT_REACHED',
+            message: `見積書保存件数の上限（${quoteStorageLimit}件）に達しています。既存の見積書を削除するか、プレミアムプランにアップグレードしてください。`
+          }
+        };
+        return c.json(response, 403);
+      }
+    }
+
     // 必須項目のバリデーション
     const requiredFields = await env.DB.prepare(`
       SELECT field_name, field_id

@@ -152,7 +152,7 @@ templates.post('/', async (c) => {
           success: false,
           error: {
             code: 'TEMPLATE_LIMIT_REACHED',
-            message: `テンプレート上限（${templateLimit}個）に達しています。プレミアムプランにアップグレードしてください。`
+            message: `フォーム保存件数の上限（${templateLimit}件）に達しています。既存のフォームを削除するか、プレミアムプランにアップグレードしてください。`
           }
         };
         return c.json(response, 403);

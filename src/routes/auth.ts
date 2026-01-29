@@ -59,11 +59,11 @@ auth.post('/register', async (c) => {
     
     const userId = result.meta.last_row_id
     
-    // サブスクリプション作成
+    // サブスクリプション作成（無料プラン: フォーム保存1件、送信10回、見積書保存1件）
     await c.env.DB.prepare(`
-      INSERT INTO user_subscriptions (user_id, plan_type, template_limit, start_date, payment_status)
-      VALUES (?, ?, ?, date('now'), ?)
-    `).bind(userId, 'free', 1, 'active').run()
+      INSERT INTO user_subscriptions (user_id, plan_type, template_limit, form_submission_limit, quote_storage_limit, start_date, payment_status)
+      VALUES (?, ?, ?, ?, ?, date('now'), ?)
+    `).bind(userId, 'free', 1, 10, 1, 'active').run()
     
     // ユーザー情報を取得
     const user = await c.env.DB.prepare(
