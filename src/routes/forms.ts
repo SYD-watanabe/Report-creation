@@ -248,10 +248,14 @@ forms.post('/:formUrl/submit', async (c) => {
   try {
     const { env } = c;
     const formUrl = c.req.param('formUrl');
+    console.log('フォーム送信リクエスト受信:', formUrl);
+    
     const body = await c.req.json();
     const { input_data } = body;
+    console.log('受信データ:', { input_data });
 
     if (!input_data || typeof input_data !== 'object') {
+      console.error('入力データが不正:', input_data);
       const response: ApiResponse = {
         success: false,
         error: {
@@ -263,13 +267,16 @@ forms.post('/:formUrl/submit', async (c) => {
     }
 
     // フォーム情報を取得
+    console.log('フォーム情報を取得中...');
     const form = await env.DB.prepare(`
       SELECT form_id, template_id, user_id, is_active
       FROM forms
       WHERE form_url = ?
     `).bind(formUrl).first();
+    console.log('フォーム情報:', form);
 
     if (!form) {
+      console.error('フォームが見つかりません:', formUrl);
       const response: ApiResponse = {
         success: false,
         error: {
@@ -370,11 +377,13 @@ forms.post('/:formUrl/submit', async (c) => {
     }
 
     // 計算項目を取得
+    console.log('計算項目を取得中...');
     const calcFields = await env.DB.prepare(`
       SELECT field_id, field_name, calculation_formula
       FROM template_fields
       WHERE template_id = ? AND field_type = 'calc' AND include_in_form = 1
     `).bind(form.template_id).all();
+    console.log('計算項目:', calcFields.results?.length || 0);
 
     // 計算項目を計算
     const calculated_data: any = {};
@@ -391,10 +400,20 @@ forms.post('/:formUrl/submit', async (c) => {
         }
       }
     }
+    console.log('計算結果:', calculated_data);
 
     // 見積書データをデータベースに保存
+    console.log('見積書データを保存中...');
     const fileName = `quote_${Date.now()}.pdf`;
     const filePath = `quotes/${form.user_id}/${fileName}`;
+
+    console.log('INSERT準備:', {
+      form_id: form.form_id,
+      template_id: form.template_id,
+      user_id: form.user_id,
+      input_data_length: JSON.stringify(input_data).length,
+      calculated_data_length: JSON.stringify(calculated_data).length
+    });
 
     const result = await env.DB.prepare(`
       INSERT INTO quotes (
@@ -409,18 +428,23 @@ forms.post('/:formUrl/submit', async (c) => {
       filePath,
       fileName
     ).run();
+    console.log('見積書保存完了:', result.meta.last_row_id);
 
     // フォームの送信数をインクリメント
+    console.log('フォーム送信数をインクリメント中...');
     await env.DB.prepare(`
       UPDATE forms SET submission_count = submission_count + 1
       WHERE form_id = ?
     `).bind(form.form_id).run();
+    console.log('フォーム送信数インクリメント完了');
 
     // テンプレートの見積書作成数をインクリメント
+    console.log('テンプレート見積書作成数をインクリメント中...');
     await env.DB.prepare(`
       UPDATE templates SET quotes_created = quotes_created + 1
       WHERE template_id = ?
     `).bind(form.template_id).run();
+    console.log('テンプレート見積書作成数インクリメント完了');
 
     const response: ApiResponse = {
       success: true,
@@ -435,11 +459,14 @@ forms.post('/:formUrl/submit', async (c) => {
     return c.json(response);
   } catch (error: any) {
     console.error('Form submission error:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error message:', error.message);
+    
     const response: ApiResponse = {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'フォームの送信に失敗しました'
+        message: `フォームの送信に失敗しました: ${error.message || '不明なエラー'}`
       }
     };
     return c.json(response, 500);
