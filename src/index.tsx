@@ -75,19 +75,19 @@ const Header = () => (
       
       {/* メインメニュー（常に表示） */}
       <div class="border-t pt-4">
-        <ul class="flex gap-4 flex-wrap">
+        <ul class="flex gap-3 flex-wrap">
           <li>
-            <a href="/dashboard" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition">
+            <a href="/dashboard" class="inline-flex items-center gap-2 px-5 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition shadow-md hover:shadow-lg cursor-pointer">
               ➕ 新規フォーム作成
             </a>
           </li>
           <li>
-            <a href="/quotes" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition">
+            <a href="/quotes" class="inline-flex items-center gap-2 px-5 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition shadow-md hover:shadow-lg cursor-pointer">
               📋 フォーム受信見積書一覧
             </a>
           </li>
           <li>
-            <button id="formsMenuBtn" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition">
+            <button id="formsMenuBtn" class="inline-flex items-center gap-2 px-5 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition shadow-md hover:shadow-lg cursor-pointer">
               📝 フォーム管理
             </button>
           </li>
