@@ -193,15 +193,21 @@ async function handleFormSubmit(event) {
     input_data[key] = value
   }
   
+  console.log('送信するデータ:', input_data)
+  
   try {
     const submitBtn = form.querySelector('button[type="submit"]')
     submitBtn.disabled = true
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>送信中...'
     
-    const { data } = await apiCall(`/api/forms/${window.FORM_URL}/submit`, {
+    console.log('API呼び出し開始:', `/api/forms/${window.FORM_URL}/submit`)
+    
+    const { response, data } = await apiCall(`/api/forms/${window.FORM_URL}/submit`, {
       method: 'POST',
       body: JSON.stringify({ input_data })
     })
+    
+    console.log('APIレスポンス:', { status: response.status, data })
     
     if (data.success) {
       // 成功メッセージを表示
@@ -225,17 +231,28 @@ async function handleFormSubmit(event) {
       // ページトップにスクロール
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } else {
-      alert(data.error.message || 'フォームの送信に失敗しました')
+      const errorMsg = data.error?.message || 'フォームの送信に失敗しました'
+      console.error('送信失敗:', data.error)
+      alert(errorMsg)
       submitBtn.disabled = false
       submitBtn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>送信'
     }
   } catch (error) {
     console.error('Form submission error:', error)
-    alert('フォームの送信に失敗しました')
+    
+    // エラーメッセージを詳細に表示
+    let errorMessage = 'フォームの送信に失敗しました'
+    if (error.message) {
+      errorMessage += '\n\nエラー詳細: ' + error.message
+    }
+    
+    alert(errorMessage)
     
     const submitBtn = form.querySelector('button[type="submit"]')
-    submitBtn.disabled = false
-    submitBtn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>送信'
+    if (submitBtn) {
+      submitBtn.disabled = false
+      submitBtn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>送信'
+    }
   }
 }
 
