@@ -1,0 +1,186 @@
+// 統合フォーム管理ページ用JavaScript
+
+// ページ初期化
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadAllForms()
+})
+
+// 全テンプレートのフォームを読み込み
+async function loadAllForms() {
+  try {
+    // テンプレート一覧を取得
+    const { data: templatesData } = await apiCall('/api/templates')
+    
+    if (!templatesData.success || templatesData.data.templates.length === 0) {
+      document.getElementById('allFormsList').innerHTML = `
+        <div class="text-center py-8">
+          <p class="text-gray-500 mb-4">テンプレートがありません</p>
+          <a href="/dashboard" class="text-blue-600 hover:underline">
+            新しいフォームを作成する
+          </a>
+        </div>
+      `
+      return
+    }
+    
+    const templates = templatesData.data.templates
+    let allFormsHtml = ''
+    
+    // 各テンプレートのフォームを取得
+    for (const template of templates) {
+      try {
+        const { data: formsData } = await apiCall(`/api/forms?template_id=${template.template_id}`)
+        
+        if (formsData.success && formsData.data.forms.length > 0) {
+          const forms = formsData.data.forms
+          
+          allFormsHtml += `
+            <div class="mb-8">
+              <h3 class="text-lg font-bold mb-4 text-gray-800">
+                📄 ${escapeHtml(template.template_name)}
+              </h3>
+              <div class="space-y-4">
+                ${forms.map(form => renderFormCard(form, template.template_id)).join('')}
+              </div>
+            </div>
+          `
+        }
+      } catch (error) {
+        console.error(`Failed to load forms for template ${template.template_id}:`, error)
+      }
+    }
+    
+    if (allFormsHtml === '') {
+      allFormsHtml = `
+        <div class="text-center py-8">
+          <p class="text-gray-500 mb-4">フォームがありません</p>
+          <a href="/dashboard" class="text-blue-600 hover:underline">
+            新しいフォームを作成する
+          </a>
+        </div>
+      `
+    }
+    
+    document.getElementById('allFormsList').innerHTML = allFormsHtml
+  } catch (error) {
+    console.error('Failed to load forms:', error)
+    document.getElementById('allFormsList').innerHTML = `
+      <p class="text-red-600 text-center py-8">フォームの読み込みに失敗しました</p>
+    `
+  }
+}
+
+// フォームカードを描画
+function renderFormCard(form, templateId) {
+  const publicUrl = `${window.location.origin}/forms/${form.form_url}`
+  const statusBadge = form.is_active
+    ? '<span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold"><i class="fas fa-check-circle mr-1"></i>✓ 公開</span>'
+    : '<span class="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-semibold"><i class="fas fa-times-circle mr-1"></i>× 非公開</span>'
+  
+  return `
+    <div class="border rounded-lg p-4 hover:shadow-md transition">
+      <div class="flex justify-between items-start mb-3">
+        <div class="flex items-center gap-3 flex-1">
+          ${statusBadge}
+          <h4 class="font-semibold text-gray-800">${escapeHtml(form.form_title)}</h4>
+        </div>
+      </div>
+      
+      <div class="text-sm text-gray-600 space-y-2 mb-4">
+        <div class="flex items-center gap-2">
+          <i class="fas fa-link"></i>
+          <a href="${publicUrl}" target="_blank" class="text-blue-600 hover:underline break-all">
+            ${publicUrl}
+          </a>
+        </div>
+        <p><i class="fas fa-clock mr-2"></i>作成日: ${formatDate(form.created_at)}</p>
+      </div>
+      
+      <div class="flex gap-2 flex-wrap">
+        <button 
+          onclick="copyFormUrl('${publicUrl}')"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+        >
+          <i class="fas fa-copy mr-1"></i>URLコピー
+        </button>
+        <button 
+          onclick="toggleFormStatus(${form.form_id}, ${form.is_active ? 0 : 1}, ${templateId})"
+          class="px-4 py-2 ${form.is_active ? 'bg-gray-600' : 'bg-green-600'} text-white rounded-lg hover:opacity-80 transition text-sm"
+        >
+          <i class="fas fa-${form.is_active ? 'eye-slash' : 'eye'} mr-1"></i>${form.is_active ? '非公開' : '公開'}
+        </button>
+        <button 
+          onclick="deleteForm(${form.form_id}, '${escapeHtml(form.form_title)}', ${templateId})"
+          class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm"
+        >
+          <i class="fas fa-trash mr-1"></i>削除
+        </button>
+      </div>
+    </div>
+  `
+}
+
+// URLをコピー
+function copyFormUrl(url) {
+  navigator.clipboard.writeText(url).then(() => {
+    alert('URLをコピーしました')
+  }).catch(err => {
+    console.error('Failed to copy:', err)
+    alert('コピーに失敗しました')
+  })
+}
+
+// フォームの公開/非公開を切り替え
+async function toggleFormStatus(formId, isActive, templateId) {
+  try {
+    const { data } = await apiCall(`/api/forms/${formId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ is_active: isActive })
+    })
+    
+    if (data.success) {
+      // フォーム一覧を再読み込み
+      await loadAllForms()
+    } else {
+      alert(data.error?.message || '更新に失敗しました')
+    }
+  } catch (error) {
+    console.error('Toggle form status error:', error)
+    alert('更新に失敗しました')
+  }
+}
+
+// フォームを削除
+async function deleteForm(formId, formTitle, templateId) {
+  if (!confirm(`フォーム「${formTitle}」を削除しますか？\n\nこの操作は取り消せません。`)) {
+    return
+  }
+  
+  try {
+    const { data } = await apiCall(`/api/forms/${formId}`, {
+      method: 'DELETE'
+    })
+    
+    if (data.success) {
+      // フォーム一覧を再読み込み
+      await loadAllForms()
+    } else {
+      alert(data.error?.message || '削除に失敗しました')
+    }
+  } catch (error) {
+    console.error('Delete form error:', error)
+    alert('削除に失敗しました')
+  }
+}
+
+// HTML エスケープ
+function escapeHtml(text) {
+  const div = document.createElement('div')
+  div.textContent = text
+  return div.innerHTML
+}
+
+// 日付フォーマット
+function formatDate(dateString) {
+  return dateString.replace('T', ' ').substring(0, 19)
+}

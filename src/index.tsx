@@ -825,6 +825,38 @@ app.get('/templates/:id/forms', (c) => {
   )
 })
 
+// 統合フォーム管理ページ（全テンプレートのフォームを一覧表示）
+app.get('/forms-management', (c) => {
+  return c.render(
+    <div class="min-h-screen bg-gray-50">
+      <Header />
+      
+      <div class="max-w-7xl mx-auto px-4 py-8">
+        <div class="mb-8">
+          <h2 class="text-2xl font-bold mb-4">フォーム管理</h2>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <div class="mb-6">
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+              <p class="text-base font-semibold text-blue-800">📌 URLをコピーして担当者様に送りましょう</p>
+            </div>
+          </div>
+          <div id="allFormsList">
+            <p class="text-gray-500 text-center py-8">読み込み中...</p>
+          </div>
+        </div>
+      </div>
+      
+      <CommonModals />
+      
+      <script src="/static/app.js"></script>
+      <script src="/static/forms-management.js"></script>
+    </div>,
+    { title: 'フォーム管理 - エクセルまもる君' }
+  )
+})
+
 // フォーム受信見積書一覧ページ
 app.get('/quotes', (c) => {
   return c.render(
