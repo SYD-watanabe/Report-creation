@@ -1,4 +1,4 @@
-// 見積書管理用JavaScript
+// フォーム受信見積書一覧用JavaScript
 
 // ページ読み込み時の初期化
 document.addEventListener('DOMContentLoaded', () => {
@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 })
 
-// 見積書管理ページ初期化
+// フォーム受信見積書一覧ページ初期化
 async function initQuotesManagement() {
   // 見積書一覧を読み込み
   await loadQuotes()

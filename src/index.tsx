@@ -83,7 +83,7 @@ const Header = () => (
           </li>
           <li>
             <a href="/quotes" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition">
-              📋 見積書管理
+              📋 フォーム受信見積書一覧
             </a>
           </li>
           <li>
@@ -818,7 +818,7 @@ app.get('/templates/:id/forms', (c) => {
   )
 })
 
-// 見積書管理ページ
+// フォーム受信見積書一覧ページ
 app.get('/quotes', (c) => {
   return c.render(
     <div class="min-h-screen bg-gray-50">
@@ -826,7 +826,7 @@ app.get('/quotes', (c) => {
       
       <div class="max-w-7xl mx-auto px-4 py-8">
         <div class="mb-8">
-          <h2 class="text-2xl font-bold mb-4">見積書管理</h2>
+          <h2 class="text-2xl font-bold mb-4">フォーム受信見積書一覧</h2>
         </div>
         
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
@@ -865,7 +865,7 @@ app.get('/quotes', (c) => {
       <script src="/static/app.js"></script>
       <script src="/static/quotes.js"></script>
     </div>,
-    { title: '見積書管理 - エクセルまもる君' }
+    { title: 'フォーム受信見積書一覧 - エクセルまもる君' }
   )
 })
 

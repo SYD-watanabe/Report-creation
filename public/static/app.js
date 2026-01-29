@@ -161,9 +161,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   
-  // 見積書管理ページ
+  // フォーム受信見積書一覧ページ
   if (window.location.pathname === '/quotes') {
-    // 見積書管理ページの初期化処理がある場合はここに追加
+    // フォーム受信見積書一覧ページの初期化処理がある場合はここに追加
   }
 })
 
