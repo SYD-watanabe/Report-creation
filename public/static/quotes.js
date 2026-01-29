@@ -58,15 +58,20 @@ function renderQuotes(quotes) {
     const inputData = JSON.parse(quote.input_data)
     const calculatedData = quote.calculated_data ? JSON.parse(quote.calculated_data) : {}
     
-    // 入力データから主要な情報を取得
-    const mainFields = Object.entries(inputData).slice(0, 3)
+    // 案件名を取得（見積書名として使用）
+    const quoteName = inputData._project_name || `見積書 #${quote.quote_id}`
+    
+    // 案件名以外の入力データを取得（表示用）
+    const displayFields = Object.entries(inputData)
+      .filter(([key]) => !key.startsWith('_')) // アンダースコアで始まるフィールドを除外
+      .slice(0, 3)
     
     return `
       <div class="border rounded-lg p-4 mb-4 hover:shadow-md transition">
         <div class="flex justify-between items-start">
           <div class="flex-1">
             <div class="flex items-center gap-2 mb-2">
-              <h4 class="font-bold text-lg">見積書 #${quote.quote_id}</h4>
+              <h4 class="font-bold text-lg">${escapeHtml(quoteName)}</h4>
               <span class="text-sm text-gray-500">
                 ${escapeHtml(quote.template_name)}
               </span>
@@ -77,11 +82,11 @@ function renderQuotes(quotes) {
             </div>
             <div class="bg-gray-50 p-3 rounded-lg">
               <p class="text-xs text-gray-500 mb-1">入力データ（抜粋）:</p>
-              ${mainFields.map(([key, value]) => 
+              ${displayFields.map(([key, value]) => 
                 `<p class="text-sm"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(String(value))}</p>`
               ).join('')}
-              ${Object.keys(inputData).length > 3 ? 
-                `<p class="text-xs text-gray-500 mt-1">他 ${Object.keys(inputData).length - 3} 項目...</p>` : ''}
+              ${displayFields.length > 3 ? 
+                `<p class="text-xs text-gray-500 mt-1">他 ${Object.entries(inputData).filter(([key]) => !key.startsWith('_')).length - 3} 項目...</p>` : ''}
             </div>
           </div>
           <div class="flex flex-row gap-2 ml-4">
@@ -120,11 +125,22 @@ async function viewQuoteDetail(quoteId) {
       const inputData = JSON.parse(quote.input_data)
       const calculatedData = quote.calculated_data ? JSON.parse(quote.calculated_data) : {}
       
+      // 案件名を取得
+      const quoteName = inputData._project_name || `見積書 #${quote.quote_id}`
+      
+      // 案件名以外の入力データを取得（表示用）
+      const displayInputData = Object.entries(inputData)
+        .filter(([key]) => !key.startsWith('_')) // アンダースコアで始まるフィールドを除外
+      
       content.innerHTML = `
         <div class="space-y-6">
           <div class="border-b pb-4">
             <h4 class="text-lg font-bold mb-2">基本情報</h4>
             <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p class="text-gray-600">見積書名</p>
+                <p class="font-semibold text-xl">${escapeHtml(quoteName)}</p>
+              </div>
               <div>
                 <p class="text-gray-600">見積書ID</p>
                 <p class="font-semibold">#${quote.quote_id}</p>
@@ -147,7 +163,7 @@ async function viewQuoteDetail(quoteId) {
           <div class="border-b pb-4">
             <h4 class="text-lg font-bold mb-3">入力データ</h4>
             <div class="bg-gray-50 p-4 rounded-lg space-y-2">
-              ${Object.entries(inputData).map(([key, value]) => `
+              ${displayInputData.map(([key, value]) => `
                 <div class="flex border-b border-gray-200 pb-2">
                   <span class="font-semibold text-gray-700 w-1/3">${escapeHtml(key)}:</span>
                   <span class="text-gray-900 w-2/3">${escapeHtml(String(value))}</span>
