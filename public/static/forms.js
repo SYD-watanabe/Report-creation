@@ -51,10 +51,24 @@ function renderPublicForm(form, fields) {
   formContainer.innerHTML = `
     <div class="mb-8">
       <h2 class="text-3xl font-bold mb-2">${escapeHtml(form.form_title)}</h2>
-      ${form.form_description ? `<p class="text-gray-600">${escapeHtml(form.form_description)}</p>` : ''}
     </div>
     
     <form id="publicForm" class="space-y-6">
+      <!-- 案件名入力欄 -->
+      <div class="mb-6">
+        <label class="block text-sm font-semibold text-gray-700 mb-2">
+          案件名 <span class="text-red-600">*</span>
+        </label>
+        <input 
+          type="text" 
+          name="_project_name"
+          required
+          class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+          placeholder="例：株式会社SYD"
+        />
+        <p class="text-sm text-gray-500 mt-1">受信した事務担当者様がわかるように社名等を入力してください</p>
+      </div>
+      
       ${inputFields.map(field => renderFormField(field)).join('')}
       
       <div class="flex justify-end gap-4 pt-4 border-t">

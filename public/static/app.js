@@ -652,8 +652,7 @@ async function initTemplateDetail() {
           method: 'POST',
           body: JSON.stringify({
             template_id: templateId,
-            form_title: formTitle,
-            form_description: `${formNameSuffix}用のフォーム`
+            form_title: formTitle
           })
         })
         
