@@ -78,7 +78,7 @@ const Header = () => (
         <ul class="space-y-2">
           <li>
             <a href="/dashboard" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition">
-              🏠 TOP
+              ➕ 新規フォーム作成
             </a>
           </li>
           <li>
