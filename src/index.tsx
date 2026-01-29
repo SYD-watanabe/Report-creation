@@ -57,7 +57,7 @@ app.use(renderer)
 
 // 共通ヘッダーコンポーネント
 const Header = () => (
-  <nav class="bg-white shadow-md">
+  <nav class="bg-white shadow-md relative">
     <div class="max-w-7xl mx-auto px-4 py-4">
       <div class="flex justify-between items-center mb-4">
         <a href="/dashboard" class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent hover:opacity-80 transition cursor-pointer">
@@ -95,27 +95,25 @@ const Header = () => (
       </div>
     </div>
     
-    {/* メニュー（折りたたみ） */}
-    <div id="settingsDropdown" class="hidden bg-gray-50 border-t shadow-lg">
-      <div class="max-w-7xl mx-auto px-4 py-4">
-        <ul class="space-y-2">
-          <li>
-            <button id="contactBtn" class="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition text-left">
-              📧 お問い合わせ
-            </button>
-          </li>
-          <li>
-            <button id="accountBtn" class="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition text-left">
-              👤 アカウント情報
-            </button>
-          </li>
-          <li>
-            <button id="logoutBtn" class="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition text-left">
-              🚪 ログアウト
-            </button>
-          </li>
-        </ul>
-      </div>
+    {/* メニュー（折りたたみ） - 絶対配置で右寄せ */}
+    <div id="settingsDropdown" class="hidden absolute right-4 top-20 bg-white border rounded-lg shadow-xl z-50 w-64">
+      <ul class="py-2">
+        <li>
+          <button id="contactBtn" class="w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-100 transition text-left">
+            📧 お問い合わせ
+          </button>
+        </li>
+        <li>
+          <button id="accountBtn" class="w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-100 transition text-left">
+            👤 アカウント情報
+          </button>
+        </li>
+        <li>
+          <button id="logoutBtn" class="w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-100 transition text-left">
+            🚪 ログアウト
+          </button>
+        </li>
+      </ul>
     </div>
   </nav>
 )
